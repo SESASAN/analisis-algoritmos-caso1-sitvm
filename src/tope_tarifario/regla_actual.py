@@ -2,7 +2,7 @@
 """Regla simplificada que el SITVM aplica hoy para el tope tarifario.
 
 Implementa la interpretación acordada por el equipo y documentada en el
-README (§2.2, Regla actual).
+README (2.2, Regla actual).
 """
 
 from estrategia import DIARIO, MENSUAL, PASAJE, SEMANAL
