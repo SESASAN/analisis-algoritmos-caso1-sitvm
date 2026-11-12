@@ -43,13 +43,24 @@ _Pendiente para la entrega del 23 de noviembre._
 _Pendiente para la entrega del 23 de noviembre._
 
 ### 1.5 Supuestos del equipo
-> Supuestos de interpretación de la operación 4, como mínimo:
-> - Cómo interpretaron la regla simplificada actual ("se aplica el pase semanal o mensual si la suma ya lo supera"), con un ejemplo.
-> - Cómo tratan los meses de 31 días frente al pase mensual de 30 días.
-> - Cómo tratan un pase que se sale del mes.
-> - Que los perfiles diferenciales usan la misma estructura con otras tarifas.
->
-> Agreguen también los supuestos permitidos por el enunciado (datos válidos, en memoria, un solo hilo, datos sintéticos).
+
+Para desarrollar la solución del caso de liquidación del tope tarifario, el equipo estableció los siguientes supuestos de interpretación:
+
+- **Interpretación de la regla simplificada actual:** se interpreta que los primeros treinta días del mes se dividen en bloques fijos: días 1 al 7, 8 al 14, 15 al 21, 22 al 28 y 29 al 30. Primero, para cada día se calcula el menor costo entre pagar los viajes con pasajes sencillos y utilizar el pase diario. Después, se suman los costos diarios de cada bloque y se limita ese valor al precio del pase semanal ($36.000). Finalmente, al acumulado de los primeros treinta días se le aplica el límite del pase mensual ($135.000). Por ejemplo, si durante los primeros siete días se realizan tres viajes diarios, el costo de los pasajes sería de $81.900. Al aplicar el pase diario, el costo de cada día queda en $9.500, para un acumulado de $66.500. Como este valor supera los $36.000 del pase semanal, la regla cobra $36.000 por ese bloque.
+
+- **Meses de 31 días:** el pase mensual tiene una cobertura de treinta días, por lo que no se extiende automáticamente al día 31. En la interpretación de la regla actual, los primeros treinta días se procesan con los límites semanal y mensual, mientras que el día 31 se cobra por separado, aplicando el menor costo entre los pasajes sencillos y el pase diario.
+
+- **Pases que exceden el mes:** cuando un pase semanal o mensual comprado en los últimos días del mes tiene una cobertura que supera el periodo analizado, se considera únicamente la cobertura correspondiente a los días restantes del mes. Sin embargo, se mantiene el precio completo del pase, ya que no se supone un descuento proporcional por los días que quedan fuera del periodo.
+
+- **Perfiles diferenciales:** se supone que los perfiles tarifarios diferenciales conservan la misma estructura de productos y reglas de cobertura, pero utilizan tarifas distintas. La implementación de este laboratorio trabaja con los valores del perfil general definidos en el enunciado; los demás perfiles requerirían proporcionar sus tarifas correspondientes.
+
+- **Validez de los datos:** se supone que las entradas son válidas y consisten en una lista de cantidades enteras no negativas, donde cada posición representa un día del mes y su valor indica la cantidad de viajes realizados. Una lista vacía representa un periodo sin viajes.
+
+- **Procesamiento en memoria y un solo hilo:** las instancias se procesan en memoria, de manera secuencial y utilizando un único hilo de ejecución. No se contempla procesamiento paralelo ni almacenamiento externo durante la ejecución de los algoritmos.
+
+- **Datos sintéticos:** para las pruebas y mediciones se utilizan instancias generadas artificialmente, con semillas fijas cuando se requiere reproducibilidad. Estos datos permiten evaluar el comportamiento de los algoritmos sin utilizar información personal o registros reales de tarjetas.
+
+- **Exactitud de la liquidación:** el costo óptimo debe cubrir todos los viajes del periodo al menor valor posible. La devolución debe corresponder exactamente a la diferencia entre el valor cobrado y el costo mínimo, sin generar devoluciones negativas.
 
 ---
 
