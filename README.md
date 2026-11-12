@@ -355,10 +355,45 @@ _Pendiente para la entrega del 23 de noviembre._
 ### 5.1 Operación 4 · Tope tarifario
 
 #### Contraejemplo de la regla actual
-> La instancia, lo que cobra la regla, el óptimo y la diferencia en pesos.
+
+Se utilizó la siguiente instancia para comparar el procedimiento actual con la solución óptima:
+
+**Entrada:** `viajes = [1, 0, 0, 2, 3, 2, 3, 3]`
+
+La instancia representa ocho días de actividad de una tarjeta, donde cada posición indica la cantidad de viajes realizados en ese día.
+
+**Resultado de la regla actual:**
+
+- Días 1 al 7: el costo de los viajes, aplicando el menor valor entre pasajes sencillos y pase diario, es de 38.500 pesos. Al superar el tope semanal, se cobran 36.000 pesos.
+- Día 8: se realizan tres viajes, cuyo costo más económico es el pase diario de 9.500 pesos.
+- Total cobrado: **45.500 pesos**.
+
+**Resultado de la estrategia óptima:**
+
+La programación dinámica encuentra una combinación más económica:
+
+- Día 1: un pasaje sencillo de 3.900 pesos.
+- Días 2 y 3: no se realizan viajes.
+- Día 4: un pase semanal de 36.000 pesos, que cubre hasta el día 10.
+
+El costo mínimo es de **39.900 pesos**.
+
+**Comparación de resultados:**
+
+| Método | Costo |
+|---|---:|
+| Regla actual | $45.500 |
+| Programación dinámica | $39.900 |
+| Solución exhaustiva | $39.900 |
+| Diferencia cobrada de más | **$5.600** |
+
+La solución exhaustiva coincide con la programación dinámica, lo que permite utilizarla como referencia independiente para comprobar el resultado.
+
+El contraejemplo demuestra que la regla actual no siempre encuentra la combinación más económica. Su limitación consiste en aplicar los topes semanales sobre bloques fijos, sin considerar que puede ser más conveniente comenzar un pase semanal en un día posterior.
 
 #### Condición contraria
-> Qué tendría que cambiar en el problema para que una estrategia voraz fuera la adecuada.
+
+Una estrategia voraz podría ser adecuada si las decisiones de compra no afectaran la cobertura de días posteriores y existiera una propiedad que garantizara que elegir la alternativa localmente más económica siempre conduce al costo global mínimo. En el problema actual esto no se cumple, porque los pases de varios días pueden cubrir viajes futuros y modificar el costo total.
 
 #### Recomendación
 > Qué estrategia adoptar, qué gana el SITVM frente a hoy y qué riesgo o límite debe conocer.
