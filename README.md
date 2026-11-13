@@ -209,14 +209,15 @@ función exh(viajes, t):
     si t > d: devolver 0
     si viajes[t] = 0: devolver exh(viajes, t+1)
 
-    mejor ← hoy(t) + exh(viajes, t+1)
-    mejor ← min(mejor, 36000  + exh(viajes, t+7))
+    mejor ← viajes[t] * 3900 + exh(viajes, t+1)
+    mejor ← min(mejor, 9500 + exh(viajes, t+1))
+    mejor ← min(mejor, 36000 + exh(viajes, t+7))
     mejor ← min(mejor, 135000 + exh(viajes, t+30))
 
     devolver mejor
 ```
 
-Esta estrategia prueba todas las combinaciones posibles sin almacenar los resultados de los subproblemas. Su espacio es Θ(d), debido a la profundidad de las llamadas recursivas. El análisis de tiempo se presenta en §4.1.
+La estrategia exhaustiva evalúa todas las combinaciones posibles de compra de productos tarifarios, sin almacenar los resultados de los subproblemas ya resueltos. Su complejidad espacial es Θ(d), la cual se encuentra determinada por la profundidad máxima de las llamadas recursivas. El análisis de su complejidad temporal se desarrolla en la sección 4.1.
 
 **Regla actual (línea base).**
 
