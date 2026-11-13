@@ -24,14 +24,43 @@ _Pendiente para la entrega del 23 de noviembre._
 ### 1.2 Entradas, salidas y restricciones
 
 #### Operación 4 · Tope tarifario
-> Entrada (`viajes_por_dia` de una tarjeta en un mes, más lo cobrado), salida (costo mínimo y devolución), unidades (pesos enteros, días del mes) y límites del caso: 950.000 tarjetas activas, meses de 28 a 31 días, tarifas del perfil general, ventana 00:00–04:00 la noche de cierre de mes y servidor de 500 W. Restricción del negocio: devolución exacta, ni un peso de más ni de menos.
+
+Al cierre de cada mes, el sistema debe revisar cada tarjeta personalizada para verificar que el valor cobrado no supere el costo de la combinación más económica de pasajes y pases que cubra todos los viajes realizados. Si se identifica un cobro superior al mínimo, la diferencia se devuelve al usuario como saldo a favor. Para el análisis, el problema se modela sobre una sola tarjeta y un solo mes.
+
+**Entradas:**
+
+- **`viajes_por_dia`:** lista de enteros no negativos con la cantidad de viajes que realizó la tarjeta cada día del mes. La posición 0 corresponde al día 1 y un día sin viajes tiene un valor de 0. Su longitud `d` representa el número de días del mes, entre 28 y 31.
+- **`cobrado`:** valor en pesos que se descontó a la tarjeta durante el mes. Este valor se utiliza únicamente para calcular la devolución correspondiente.
+- **Tarifas del perfil general:** son fijas y se resumen en la siguiente tabla.
 
 | Producto | Valor | Cobertura |
-|---|---|---|
+|---|---:|---|
 | Pasaje sencillo | $3.900 | Un viaje |
 | Pase diario | $9.500 | Viajes ilimitados durante un día calendario |
 | Pase semanal | $36.000 | Viajes ilimitados durante 7 días consecutivos |
 | Pase mensual | $135.000 | Viajes ilimitados durante 30 días consecutivos |
+
+**Salidas:**
+
+- **Costo mínimo:** valor en pesos de la combinación de productos más económica que cubre todos los viajes del mes (`costo_minimo`).
+- **Devolución:** diferencia entre el valor cobrado y el costo mínimo, que nunca puede ser negativa (`liquidar_tope`). Si a la tarjeta se le cobró el mínimo o menos, la devolución es 0.
+
+**Restricciones:**
+
+- **Devolución exacta:** la devolución debe corresponder exactamente a la diferencia entre lo cobrado y la combinación más económica, sin devolver al usuario menos de lo que le corresponde ni más de lo que corresponde. Por esta razón, no se permiten aproximaciones y todos los valores se manejan como pesos enteros, sin decimales.
+- **Cobertura completa:** la combinación elegida debe cubrir todos los días en los que se realizaron viajes. Un pase semanal o mensual cubre días consecutivos a partir del día en que se compra.
+- **Ventana operativa:** la operación se ejecuta durante la noche del cierre de mes, dentro de la ventana de 4 horas (00:00 a 04:00) que comparte con las operaciones 1 y 2.
+- **Volumen:** aproximadamente 950.000 tarjetas se utilizan al menos una vez al mes y todas deben liquidarse dentro de esa misma ventana.
+- **Infraestructura:** se dispone de un único servidor de aproximadamente 500 W, sin procesamiento en paralelo ni distribuido.
+
+| Elemento | Unidad | Límite del caso |
+|---|---|---|
+| Días del periodo (`d`) | días | 28 a 31 |
+| Viajes por día | viajes | Entero mayor o igual a 0 |
+| Costos y devoluciones | pesos enteros | Devolución mayor o igual a 0 |
+| Tarjetas por cierre de mes | tarjetas | ≈ 950.000 |
+| Ventana de ejecución | horas | 4 (00:00 – 04:00) |
+| Potencia del servidor | vatios | ≈ 500 W |
 
 #### Operación _X_
 _Pendiente para la entrega del 23 de noviembre._
@@ -311,8 +340,22 @@ Código en [`src/tope_tarifario/`](src/tope_tarifario/):
 ### 3.2 Operación _X_
 _Pendiente para la entrega del 23 de noviembre._
 
+
 ### 3.3 Tecnologías y herramientas
-> Python (versión), matplotlib, entorno virtual y `requirements.txt`.
+
+Para el desarrollo del proyecto se utilizaron las siguientes herramientas y bibliotecas:
+
+| Herramienta | Uso en el proyecto |
+|---|---|
+| Python 3.14.0 | Lenguaje utilizado para implementar las estrategias, desarrollar las pruebas y realizar las mediciones. |
+| `random` (biblioteca estándar) | Generación de instancias sintéticas en [`datos.py`](src/tope_tarifario/datos.py). Se utiliza un generador `random.Random` con una semilla fija para garantizar que los datos sean reproducibles. |
+| `time` (biblioteca estándar) | Medición de los tiempos de ejecución mediante `time.perf_counter()`, implementada en [`medicion.py`](src/tope_tarifario/medicion.py). |
+| `matplotlib` | Generación de las gráficas de tiempo y número de operaciones frente al tamaño de la entrada. Es la única dependencia externa del proyecto. |
+| Entorno virtual (`venv`) | Aislamiento de las dependencias del proyecto para evitar conflictos con otros entornos de Python. La carpeta `.venv/` se excluye del repositorio. |
+| `requirements.txt` | Archivo que registra las dependencias necesarias para instalar y reproducir el entorno mediante `pip install -r requirements.txt` (§8). |
+| Git y GitHub | Control de versiones y trabajo colaborativo. Cada integrante trabaja en ramas `feature/<nombre>` creadas a partir de `development`, y los cambios se integran en esta última. La rama `main` conserva la versión estable del proyecto. El archivo `.gitignore` excluye elementos como `.venv/`, `__pycache__/` y archivos de configuración de los editores. |
+
+Las estrategias, la solución exhaustiva y la regla actual se implementaron manualmente, sin utilizar bibliotecas de optimización ni herramientas externas que resuelvan el problema, de acuerdo con los requisitos del laboratorio. Además, el código sigue las convenciones de PEP 8 e incluye anotaciones de tipos (*type hints*) y documentación de funciones mediante *docstrings* con formato Google Style.
 
 ---
 
@@ -321,18 +364,114 @@ _Pendiente para la entrega del 23 de noviembre._
 ### 4.1 Operación 4 · Tope tarifario
 
 #### Complejidad temporal y espacial
-> Complejidad de la programación dinámica, de la exhaustiva y de la regla actual, y su contraste.
+
+En este análisis, `d` representa el número de días del periodo y `k` corresponde al número de días en los que se realizaron viajes (`k ≤ d`).
+
+**Programación dinámica (`estrategia.py`).** El ciclo recorre los días una sola vez, desde el día `d` hasta el día 1. En un día sin viajes, únicamente copia el valor de `C(t + 1)`. En cambio, en un día con viajes, compara tres opciones: pagar los viajes de ese día, comprar un pase semanal o comprar un pase mensual. Cada comparación tiene un costo de Θ(1), porque consulta una posición de la tabla que ya está calculada.
+
+El contador de `costo_minimo_contando` registra una operación por cada día sin viajes y tres por cada día con viajes. Por lo tanto, el total de operaciones se encuentra entre `d` y `3d`:
+
+```text
+T(d) = (d − k) · 1 + k · 3
+d ≤ T(d) ≤ 3d
+T(d) ∈ Θ(d)
+```
+
+El espacio adicional es Θ(d), porque se almacenan las listas `costos` y `elecciones`, cada una con `d + 2` posiciones (§2.1).
+
+**Exhaustiva (`exhaustivo.py`).** Esta estrategia no almacena los resultados de los subproblemas, por lo que vuelve a calcularlos cada vez que los encuentra. En cada día con viajes abre cuatro caminos: pagar los pasajes individuales y comprar un pase diario (ambos continúan en el día `t + 1`), comprar un pase semanal (continúa en el día `t + 7`) o comprar un pase mensual (continúa en el día `t + 30`).
+
+Cuando todos los días tienen viajes, el número de llamadas cumple la siguiente recurrencia:
+
+```text
+T(d) = 2T(d − 1) + T(d − 7) + T(d − 30) + Θ(1)
+```
+
+Como `T(d) ≥ 2T(d − 1)`, al desarrollar la recurrencia nivel por nivel, como en un árbol de recursión, se obtiene una cota inferior de `2^d`. Es decir:
+
+```text
+T(d) ∈ Ω(2^d)
+```
+
+Esto significa que, cuando todos los días tienen viajes, cada día adicional duplica como mínimo el trabajo de la solución exhaustiva. Los días sin viajes no generan caminos nuevos, porque la función simplemente avanza al siguiente día. Por esta razón, en términos generales, el costo crece de forma exponencial respecto a `k`, es decir, los días con viajes, y no necesariamente respecto a todos los días del periodo.
+
+Para un mes de 31 días con viajes todos los días, esto representa más de `2^31 ≈ 2.100 millones` de llamadas para una sola tarjeta.
+
+El espacio adicional es Θ(d), correspondiente a la profundidad máxima de la pila de llamadas recursivas, ya que no se utiliza ninguna tabla para almacenar resultados.
+
+**Regla actual (`regla_actual.py`).** Recorre cada día una sola vez: los días 1 a 30 se procesan dentro de sus bloques semanales y, si existe, el día 31 se procesa por separado. Por lo tanto, su complejidad temporal es Θ(d). Solo utiliza variables auxiliares como `total`, `costo_bloque` y los índices, por lo que su espacio adicional es Θ(1).
+
+| Estrategia | Tiempo | Espacio adicional | ¿Resultado exacto? |
+|---|---|---|---|
+| Programación dinámica | Θ(d) | Θ(d) | Sí |
+| Exhaustiva | Ω(2^k), exponencial en los días con viajes | Θ(d) (pila de recursión) | Sí |
+| Regla actual | Θ(d) | Θ(1) | No (ver §5.1) |
+
+**Contraste.** La programación dinámica y la regla actual pertenecen a la misma clase de complejidad temporal, Θ(d). Para un mes de 31 días, la programación dinámica realiza como máximo `3 · 31 = 93` operaciones, según el contador definido para esta estrategia.
+
+Esto demuestra que encontrar el costo mínimo mediante programación dinámica no implica aumentar el orden de complejidad temporal respecto a la regla actual. Ambas estrategias recorren los días del periodo una sola vez. La diferencia principal está en el resultado: mientras la regla actual puede generar cobros superiores al mínimo, la programación dinámica encuentra la combinación de menor costo.
+
+Por otro lado, la solución exhaustiva también encuentra el costo mínimo, pero su crecimiento exponencial hace que resulte poco práctica para tarjetas que registran viajes durante muchos días. Esto explica por qué una solución de este tipo no sería adecuada para procesar el volumen real de tarjetas dentro de la ventana operativa.
+
+Cabe resaltar que la programación dinámica obtiene el mismo resultado exacto que la solución exhaustiva porque calcula cada subproblema una sola vez y almacena su resultado para reutilizarlo, evitando repetir cálculos innecesariamente.
 
 #### Verificación
-> Cómo se verificó y qué casos cubre [`pruebas.py`](src/tope_tarifario/pruebas.py):
-> - Casos límite (mes vacío, un día, sin viajes, todos los días con viajes, pase que se sale del mes).
-> - El ejemplo a mano de §2.2.
-> - Al menos 20 instancias aleatorias con semilla fija en las que la programación dinámica coincide con la exhaustiva.
-> - Que `liquidar_tope` devuelve exactamente cobrado − mínimo y nunca un valor negativo.
-> - La instancia del contraejemplo de §5.1.
+
+La verificación se realiza mediante el archivo [`pruebas.py`](src/tope_tarifario/pruebas.py), en el que se utiliza la solución exhaustiva como referencia para comparar los resultados obtenidos por la programación dinámica. Si ambas estrategias obtienen el mismo costo en diferentes instancias, se obtiene evidencia de que la tabla de programación dinámica se está construyendo correctamente y de que sus resultados coinciden con los de la solución exhaustiva.
+
+Las instancias aleatorias se generan mediante [`datos.py`](src/tope_tarifario/datos.py), utilizando la semilla fija 2026. De esta manera, cualquier persona que ejecute las pruebas obtendrá exactamente las mismas instancias. Para ejecutarlas, se utiliza el siguiente comando:
+
+```bash
+python src/tope_tarifario/pruebas.py
+```
+
+Las pruebas se organizan en cinco grupos:
+
+| Grupo | Función | Qué verifica |
+|---|---|---|
+| Casos límite | `probar_casos_limite` | Periodo vacío (`[]`), un día sin viajes, un mes completo sin viajes, un solo día con 1, 2, 3 y 10 viajes, meses de 28 a 31 días con muchos viajes y un pase semanal que se sale del mes. |
+| Ejemplo a mano | `probar_ejemplo_a_mano` | La tabla de §2.2 fila por fila (C(1) a C(9)), las elecciones y las compras reconstruidas. |
+| Instancias aleatorias | `probar_instancias_aleatorias` | 160 instancias en las que la programación dinámica y la solución exhaustiva obtienen el mismo costo. |
+| Devolución exacta | `probar_devolucion_exacta` | Que la devolución sea exactamente igual a `cobrado - mínimo` y que nunca sea negativa. |
+| Contraejemplo | `probar_contraejemplo` | Que la regla actual cobre 45.500 pesos frente a los 39.900 pesos del óptimo en la instancia de §5.1. |
+
+**Casos límite.** Además de los casos sin viajes, se escogieron situaciones que permiten revisar los puntos en los que cambia la mejor decisión:
+
+- Un día con 2 viajes cuesta 7.800 pesos en pasajes. Con 3 viajes conviene comprar el pase diario de 9.500 pesos, ya que los pasajes individuales costarían 11.700 pesos.
+- Tres días con 3 viajes cuestan 28.500 pesos en pases diarios, valor que todavía es menor que el de un pase semanal. Con cuatro días, el costo de los pases diarios sería de 38.000 pesos, por lo que conviene comprar el pase semanal de 36.000 pesos.
+- En meses de 28, 29 y 30 días con muchos viajes, el costo corresponde al pase mensual de 135.000 pesos. En un mes de 31 días, el pase mensual no alcanza a cubrir el último día, por lo que el costo es de 135.000 + 9.500 = 144.500 pesos, de acuerdo con el supuesto de §1.5.
+- Un mes con viajes únicamente durante los últimos cuatro días puede cubrirse con un pase semanal comprado el día 27, aunque este alcance hasta el día 33. Esto permite comprobar el límite `min(t + 7, d + 1)` de la recurrencia.
+
+**Instancias aleatorias.** Se probaron dos grupos de instancias:
+
+- **120 periodos cortos:** de 1 a 12 días, con 10 instancias por tamaño y viajes en casi todos los días. Se utilizan estos tamaños porque la solución exhaustiva puede terminar su ejecución en un tiempo razonable.
+- **40 meses reales:** de 28 a 31 días, con solo 6 a 12 días con viajes. Como la solución exhaustiva crece según los días con viajes y no únicamente según la duración del mes, estos casos permiten ejecutar las pruebas e incluir situaciones relacionadas con el pase mensual y el día 31.
+
+En cada instancia no solo se compara el costo obtenido por ambas estrategias. También se revisa que:
+
+- Las compras reconstruidas mediante `reconstruir_compras` cubran todos los días con viajes y sumen exactamente C(1). Para comprobarlo, se utiliza la función auxiliar `costo_de_compras`, que vuelve a calcular el costo a partir de las compras realizadas, sin consultar la tabla de programación dinámica.
+- La regla actual nunca cobre menos que el costo mínimo, porque siempre construye una combinación válida de productos.
+- La lista de entrada no se modifique después de ejecutar las funciones.
+
+**Devolución exacta.** Esta es una de las restricciones principales del problema. Se comprueba mediante valores calculados manualmente: si se cobraron 45.500 pesos, se deben devolver 5.600; si se cobró exactamente el mínimo o un valor inferior, la devolución debe ser 0. También se realizan pruebas con 30 tarjetas aleatorias en las que el valor cobrado corresponde al calculado por la regla actual. En todos los casos, el valor cobrado menos la devolución debe coincidir exactamente con el costo mínimo obtenido por la solución exhaustiva.
+
+**Resultado.** Todas las pruebas pasan y el script finaliza mostrando el mensaje `Todas las pruebas pasaron`.
+
+**Limitación de la verificación.** La solución exhaustiva toma las decisiones de la misma forma que la programación dinámica, pero sin almacenar los resultados de los subproblemas. Por esta razón, permite detectar errores en los índices, el orden de llenado de la tabla y la reconstrucción de las compras, pero no necesariamente errores en el modelo del problema, como establecer incorrectamente la duración de un pase.
+
+Para reducir este riesgo, también se utilizan el ejemplo resuelto manualmente y los casos límite, cuyos resultados se calcularon sin depender del código implementado.
 
 #### Diseño de los experimentos
-> Lo implementado en [`datos.py`](src/tope_tarifario/datos.py) y [`medicion.py`](src/tope_tarifario/medicion.py): semilla, número de repeticiones, tamaños d (al menos seis, con una pareja d y 2d), viajes en casi todos los días, y la exhaustiva solo en periodos cortos. La programación dinámica se lleva a tamaños mucho mayores. Se mide solo la ejecución, con `perf_counter`.
+
+Los experimentos se diseñaron para comparar el comportamiento de las tres estrategias implementadas: programación dinámica, solución exhaustiva y regla actual.
+
+Para generar las instancias se utiliza el archivo [`datos.py`](src/tope_tarifario/datos.py), que emplea una semilla fija para garantizar la reproducibilidad de los resultados. Las mediciones se realizan mediante [`medicion.py`](src/tope_tarifario/medicion.py), utilizando `time.perf_counter()` para registrar los tiempos de ejecución.
+
+Se utilizan diferentes tamaños de entrada `d`, con al menos seis tamaños y una pareja de valores `d` y `2d`, para analizar cómo cambia el comportamiento de las estrategias a medida que aumenta el número de días del periodo.
+
+Las instancias contienen viajes en casi todos los días, con el propósito de observar el comportamiento de las estrategias bajo condiciones que requieren procesar una mayor cantidad de decisiones. Debido al crecimiento exponencial de la solución exhaustiva, esta se mide únicamente en periodos cortos, mientras que la programación dinámica y la regla actual se evalúan también con tamaños mayores.
+
+Las mediciones consideran únicamente el tiempo de ejecución de cada estrategia, sin incluir el tiempo de generación de las instancias. De esta manera, se busca comparar el costo computacional de las soluciones bajo las mismas condiciones experimentales.
 
 #### Resultados
 
@@ -341,10 +480,24 @@ _Pendiente para la entrega del 23 de noviembre._
 ![Operaciones frente al tamaño – tope tarifario](graficas/tope_tarifario/operaciones_vs_n.png)
 
 #### Lo medido contra lo esperado
-> Con la pareja d → 2d: cuánto se multiplicaron el tiempo y las operaciones de cada solución, si coincide con la complejidad y por qué hay diferencias.
+
+Para analizar el comportamiento de las estrategias, se comparan los resultados obtenidos experimentalmente con las complejidades temporales establecidas en el análisis teórico.
+
+Se utiliza la pareja de tamaños `d` y `2d` para calcular los factores de crecimiento del tiempo de ejecución y del número de operaciones. A partir de estos valores, se analiza si el comportamiento observado coincide con lo esperado para cada estrategia.
+
+En el caso de la programación dinámica y la regla actual, se espera un crecimiento aproximadamente lineal, debido a que ambas recorren los días del periodo una sola vez. Por otro lado, la solución exhaustiva presenta un crecimiento exponencial cuando aumenta la cantidad de días con viajes, debido a que genera múltiples caminos de decisión y vuelve a calcular subproblemas que ya había resuelto.
+
+Los resultados experimentales permiten identificar las diferencias entre las estrategias y comprobar si su comportamiento práctico coincide con el análisis teórico.
 
 #### Extrapolación al volumen real
-> Tiempo estimado para unas 950.000 tarjetas con la programación dinámica, la regla actual y la exhaustiva, comparado con la ventana de 4 h. Justifiquen la forma de la curva antes de extrapolar y digan cuándo la exhaustiva no terminaría.
+
+El caso plantea el procesamiento de aproximadamente 950.000 tarjetas al cierre de cada mes, dentro de una ventana operativa de 4 horas (00:00 a 04:00), utilizando un único servidor de aproximadamente 500 W.
+
+Para evaluar la viabilidad de cada estrategia, se estima el tiempo total necesario para procesar todas las tarjetas a partir de los tiempos medidos experimentalmente por tarjeta.
+
+La programación dinámica y la regla actual presentan un crecimiento temporal Θ(d), por lo que su comportamiento permite estimar el tiempo de procesamiento para el volumen real de tarjetas. En cambio, la solución exhaustiva presenta un crecimiento exponencial respecto a los días con viajes, lo que limita considerablemente su aplicación cuando aumenta la cantidad de viajes registrados durante el mes.
+
+A partir de los resultados experimentales, se comparan los tiempos estimados de las tres estrategias con la ventana operativa disponible. También se analiza en qué condiciones la solución exhaustiva deja de ser viable para procesar todas las tarjetas dentro del tiempo establecido.
 
 ### 4.2 Operación _X_
 _Pendiente para la entrega del 23 de noviembre._
