@@ -209,8 +209,9 @@ función exh(viajes, t):
     si t > d: devolver 0
     si viajes[t] = 0: devolver exh(viajes, t+1)
 
-    mejor ← hoy(t) + exh(viajes, t+1)
-    mejor ← min(mejor, 36000  + exh(viajes, t+7))
+    mejor ← viajes[t] * 3900 + exh(viajes, t+1)
+    mejor ← min(mejor, 9500 + exh(viajes, t+1))
+    mejor ← min(mejor, 36000 + exh(viajes, t+7))
     mejor ← min(mejor, 135000 + exh(viajes, t+30))
 
     devolver mejor
