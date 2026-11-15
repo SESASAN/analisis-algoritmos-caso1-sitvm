@@ -463,15 +463,29 @@ Para reducir este riesgo, también se utilizan el ejemplo resuelto manualmente y
 
 #### Diseño de los experimentos
 
-Los experimentos se diseñaron para comparar el comportamiento de las tres estrategias implementadas: programación dinámica, solución exhaustiva y regla actual.
+Los experimentos se realizan mediante [`medicion.py`](src/tope_tarifario/medicion.py), mientras que las instancias se generan con la función `generar_instancias` de [`datos.py`](src/tope_tarifario/datos.py), utilizando la semilla fija `2026`. Para cada tamaño de entrada, las tarjetas se generan una sola vez y las tres soluciones se ejecutan sobre las mismas instancias, lo que permite realizar una comparación bajo condiciones equivalentes.
 
-Para generar las instancias se utiliza el archivo [`datos.py`](src/tope_tarifario/datos.py), que emplea una semilla fija para garantizar la reproducibilidad de los resultados. Las mediciones se realizan mediante [`medicion.py`](src/tope_tarifario/medicion.py), utilizando `time.perf_counter()` para registrar los tiempos de ejecución.
+Cada día tiene una probabilidad de 0,9 de registrar viajes. Cuando hay viajes, se generan entre 1 y 4. De esta manera, la cantidad de días con viajes aumenta a medida que crece `d`, lo que permite analizar el comportamiento de las estrategias frente a entradas de mayor tamaño.
 
-Se utilizan diferentes tamaños de entrada `d`, con al menos seis tamaños y una pareja de valores `d` y `2d`, para analizar cómo cambia el comportamiento de las estrategias a medida que aumenta el número de días del periodo.
+Se utilizan tres series de experimentos:
 
-Las instancias contienen viajes en casi todos los días, con el propósito de observar el comportamiento de las estrategias bajo condiciones que requieren procesar una mayor cantidad de decisiones. Debido al crecimiento exponencial de la solución exhaustiva, esta se mide únicamente en periodos cortos, mientras que la programación dinámica y la regla actual se evalúan también con tamaños mayores.
+| Serie | Tamaños `d` (días) | Tarjetas por tamaño | Soluciones medidas | Propósito |
+|---|---|---:|---|---|
+| 1 · Periodos cortos | 6, 8, 10, 12, 14, 16, 18 y 20 | 5 | DP, exhaustiva y regla actual | Comparar la programación dinámica con la solución exhaustiva en tamaños donde esta última todavía puede ejecutarse. |
+| 2 · Periodos largos | 1.000, 2.000, 5.000, 10.000, 20.000, 50.000 y 100.000 | 3 | DP y regla actual | Analizar el crecimiento lineal de ambas estrategias con entradas de mayor tamaño. |
+| 3 · Volumen real | 30 | 2.000 | DP y regla actual | Medir el tiempo por tarjeta para un periodo de 30 días y utilizarlo como base de la extrapolación. |
 
-Las mediciones consideran únicamente el tiempo de ejecución de cada estrategia, sin incluir el tiempo de generación de las instancias. De esta manera, se busca comparar el costo computacional de las soluciones bajo las mismas condiciones experimentales.
+Los tamaños menores y mayores a 31 días se utilizan como instancias sintéticas para estudiar el crecimiento de los algoritmos. No representan la duración de un mes real, que en el caso planteado está entre 28 y 31 días.
+
+Las condiciones de medición son las siguientes:
+
+- **Parejas `d` y `2d`:** la serie 1 incluye las parejas 6→12, 8→16 y 10→20. La serie 2 incluye 1.000→2.000, 5.000→10.000, 10.000→20.000 y 50.000→100.000.
+- **Repeticiones:** cada medición se repite 5 veces y se reporta el tiempo medio por tarjeta, con el propósito de reducir el efecto de las variaciones del sistema operativo.
+- **Cronómetro:** `time.perf_counter()` mide únicamente el tiempo de ejecución de cada solución. La generación de los datos queda por fuera de la medición.
+- **Verificación dentro del experimento:** antes de medir cada tamaño de la serie 1, se comprueba mediante `assert` que la programación dinámica y la solución exhaustiva obtengan el mismo costo para todas las tarjetas.
+- **Operaciones elementales:** cada estrategia utiliza un contador propio. En la programación dinámica se cuentan las opciones evaluadas (`costo_minimo_contando`); en la solución exhaustiva, las llamadas recursivas (`costo_exhaustivo_contando`); y en la regla actual, los días procesados (`costo_regla_actual_contando`).
+- **Límite de la solución exhaustiva:** las mediciones de esta estrategia se detienen en `d = 20`, donde alcanza un tiempo cercano a 0,29 segundos por tarjeta. Su crecimiento impide continuar con tamaños mayores en condiciones razonables de medición.
+- **Equipo de medición:** procesador AMD Ryzen 5 7600X (6 núcleos, 12 hilos) y 32 GB de memoria RAM DDR5 a 4800 MHz, con Python 3.14.0. Las mediciones se ejecutaron en un solo hilo. El experimento completo tarda menos de 30 segundos.
 
 #### Resultados
 
@@ -479,25 +493,75 @@ Las mediciones consideran únicamente el tiempo de ejecución de cada estrategia
 
 ![Operaciones frente al tamaño – tope tarifario](graficas/tope_tarifario/operaciones_vs_n.png)
 
+En las gráficas se observa el comportamiento de las tres estrategias a medida que aumenta el tamaño de la entrada. En el panel izquierdo se utiliza una escala logarítmica en el eje `y`, lo que permite visualizar las diferencias entre los tiempos de ejecución. En esta escala, la solución exhaustiva forma una línea recta ascendente, lo que indica un crecimiento exponencial, mientras que la programación dinámica y la regla actual se mantienen casi planas.
+
+En el panel derecho, que utiliza una escala lineal, se observa que tanto el tiempo como el número de operaciones de la programación dinámica y de la regla actual aumentan de manera aproximadamente proporcional a `d`.
+
+A continuación, se presentan algunas mediciones representativas de los experimentos:
+
+| `d` | DP (ms) | Exhaustiva (ms) | Regla actual (ms) | Operaciones DP | Operaciones exhaustiva | Operaciones regla |
+|---:|---:|---:|---:|---:|---:|---:|
+| 6 | 0,0031 | 0,022 | 0,0009 | 17 | 218 | 6 |
+| 10 | 0,0027 | 0,321 | 0,0013 | 28 | 2.846 | 10 |
+| 12 | 0,0034 | 1,194 | 0,0014 | 34 | 11.400 | 12 |
+| 16 | 0,0040 | 16,144 | 0,0018 | 46 | 158.031 | 16 |
+| 20 | 0,0052 | 290,197 | 0,0019 | 58 | 2.813.425 | 20 |
+| 10.000 | 2,707 | — | 0,726 | 28.019 | — | 10.000 |
+| 20.000 | 5,456 | — | 1,429 | 56.028 | — | 20.000 |
+| 100.000 | 28,589 | — | 7,146 | 280.090 | — | 100.000 |
+
 #### Lo medido contra lo esperado
 
-Para analizar el comportamiento de las estrategias, se comparan los resultados obtenidos experimentalmente con las complejidades temporales establecidas en el análisis teórico.
+Para comparar el comportamiento experimental con el análisis teórico, se utilizan parejas de tamaños `d` y `2d`. Se calcula cuánto aumentan el tiempo de ejecución y el número de operaciones al duplicar el tamaño de la entrada.
 
-Se utiliza la pareja de tamaños `d` y `2d` para calcular los factores de crecimiento del tiempo de ejecución y del número de operaciones. A partir de estos valores, se analiza si el comportamiento observado coincide con lo esperado para cada estrategia.
+| Pareja | Solución | Factor de tiempo | Factor de operaciones | Factor esperado |
+|---|---|---:|---:|---:|
+| 10 → 20 | Exhaustiva | ×905 | ×989 | ≈ 2^10 = 1.024 |
+| 10 → 20 | DP | ×1,94 | ×2,04 | 2 |
+| 10 → 20 | Regla actual | ×1,51 | ×2,00 | 2 |
+| 10.000 → 20.000 | DP | ×2,02 | ×2,00 | 2 |
+| 10.000 → 20.000 | Regla actual | ×1,97 | ×2,00 | 2 |
+| 50.000 → 100.000 | DP | ×2,07 | ×2,00 | 2 |
 
-En el caso de la programación dinámica y la regla actual, se espera un crecimiento aproximadamente lineal, debido a que ambas recorren los días del periodo una sola vez. Por otro lado, la solución exhaustiva presenta un crecimiento exponencial cuando aumenta la cantidad de días con viajes, debido a que genera múltiples caminos de decisión y vuelve a calcular subproblemas que ya había resuelto.
+A partir de estos resultados, se identifican los siguientes comportamientos:
 
-Los resultados experimentales permiten identificar las diferencias entre las estrategias y comprobar si su comportamiento práctico coincide con el análisis teórico.
+- **Programación dinámica y regla actual:** al duplicar `d`, el número de operaciones se duplica. En la serie de periodos largos, el tiempo de ejecución aumenta aproximadamente entre 1,9 y 2,1 veces. Estos resultados coinciden con el crecimiento lineal esperado, Θ(d). En la programación dinámica se realizan aproximadamente 2,8 operaciones por día, debido a que el 90 % de los días tienen viajes y requieren evaluar tres opciones, mientras que los días sin viajes requieren una sola operación. Esto se mantiene dentro del rango `d ≤ T(d) ≤ 3d` establecido en el análisis de complejidad.
+
+- **Solución exhaustiva:** al pasar de 10 a 20 días, el número de operaciones aumenta aproximadamente 989 veces, un valor cercano a `2^10 = 1.024`. El tiempo de ejecución aumenta aproximadamente 905 veces. Esto evidencia un crecimiento exponencial, coherente con la cota inferior Ω(2^d) obtenida para el caso en el que todos los días tienen viajes. El factor observado puede ser menor debido a que aproximadamente el 10 % de los días no registran viajes y no generan nuevas ramas de decisión. Cabe aclarar que esta medición es una evidencia empírica y no una demostración: muestra que, en estas instancias, cada día adicional casi duplica el trabajo, pero no prueba una cota superior. La recurrencia solo garantiza que el trabajo está entre Ω(2^d) y O(4^d), porque cada día con viajes abre como máximo cuatro caminos.
+
+- **Diferencias en las mediciones:** en la serie de periodos cortos, los tiempos de la programación dinámica y de la regla actual son de pocos microsegundos. En estos tamaños, el costo fijo de llamar las funciones y crear las listas tiene una influencia importante sobre el tiempo total. Por esta razón, los factores de crecimiento presentan algunas variaciones. Por ejemplo, entre 6 y 12 días, la programación dinámica aumenta aproximadamente ×1,09, mientras que entre 10 y 20 días la regla actual aumenta ×1,51. Incluso se observa que la programación dinámica tarda más con 6 días que con 8. En la serie de periodos largos, este efecto pierde importancia y los factores se acercan a 2. El contador de operaciones no presenta estas variaciones, ya que no depende del tiempo de ejecución del computador.
+
+- **Programación dinámica frente a regla actual:** ambas estrategias presentan crecimiento lineal, pero la programación dinámica tiene un mayor costo constante por día. Para `d = 100.000`, tarda 28,589 ms, frente a 7,146 ms de la regla actual. Esto representa una diferencia aproximada de cuatro veces, debido a que la programación dinámica evalúa varias opciones y almacena resultados en dos tablas por día. Sin embargo, ambas estrategias mantienen el mismo orden de complejidad temporal.
 
 #### Extrapolación al volumen real
 
-El caso plantea el procesamiento de aproximadamente 950.000 tarjetas al cierre de cada mes, dentro de una ventana operativa de 4 horas (00:00 a 04:00), utilizando un único servidor de aproximadamente 500 W.
+El tiempo total de un cierre de mes se estima multiplicando el tiempo promedio por tarjeta por el número total de tarjetas que deben procesarse, aproximadamente 950.000. Como las tarjetas se liquidan de manera independiente y una por una, el tiempo total aumenta proporcionalmente al número de tarjetas.
 
-Para evaluar la viabilidad de cada estrategia, se estima el tiempo total necesario para procesar todas las tarjetas a partir de los tiempos medidos experimentalmente por tarjeta.
+Para realizar esta estimación se utilizan los siguientes criterios:
 
-La programación dinámica y la regla actual presentan un crecimiento temporal Θ(d), por lo que su comportamiento permite estimar el tiempo de procesamiento para el volumen real de tarjetas. En cambio, la solución exhaustiva presenta un crecimiento exponencial respecto a los días con viajes, lo que limita considerablemente su aplicación cuando aumenta la cantidad de viajes registrados durante el mes.
+- **Programación dinámica y regla actual:** no es necesario extrapolar el tamaño `d`, porque el tiempo por tarjeta se midió directamente para un periodo de 30 días, utilizando 2.000 tarjetas en la serie 3.
+- **Solución exhaustiva:** no fue posible medir esta estrategia para 30 días debido a su crecimiento exponencial. Por esta razón, se hace una extrapolación empírica a partir del comportamiento observado entre `d = 10` y `d = 20`, donde el tiempo aumenta aproximadamente por un factor de 1,975 por cada día adicional. Partiendo de 0,290 segundos para `d = 20`, se estima el tiempo para 30 días mediante:
 
-A partir de los resultados experimentales, se comparan los tiempos estimados de las tres estrategias con la ventana operativa disponible. También se analiza en qué condiciones la solución exhaustiva deja de ser viable para procesar todas las tarjetas dentro del tiempo establecido.
+```text
+t(30) ≈ 0,290 s · 1,975^10
+t(30) ≈ 262 s por tarjeta
+```
+
+En este caso no sería adecuado utilizar una regla de tres lineal, ya que el crecimiento observado es exponencial y no proporcional al tamaño de la entrada. Este valor es una aproximación, no una garantía matemática: supone que el factor de 1,975 por día se mantiene entre 20 y 30 días, y corresponde a una tarjeta como las sintéticas, con viajes en aproximadamente el 90 % de los días.
+
+Los tiempos estimados para procesar las 950.000 tarjetas son:
+
+| Solución | Tiempo por tarjeta (d = 30) | Tiempo para 950.000 tarjetas | ¿Cabe en la ventana de 4 h? |
+|---|---:|---:|---|
+| Programación dinámica | 7,0 µs | ≈ 6,7 s | Sí |
+| Regla actual | 2,6 µs | ≈ 2,5 s | Sí |
+| Exhaustiva (estimada) | ≈ 262 s | ≈ 69.300 h (≈ 8 años) | No |
+
+La programación dinámica permitiría liquidar todas las tarjetas en menos de 10 segundos, utilizando menos del 0,1 % de la ventana de 4 horas, que además comparte con las operaciones 1 y 2.
+
+Por el contrario, la solución exhaustiva no sería viable para este volumen de procesamiento: necesitaría aproximadamente 8 años para completar un solo cierre de mes bajo las condiciones estimadas. Para un periodo de 31 días con viajes todos los días, el tiempo sería todavía mayor.
+
+Estas estimaciones dependen del computador utilizado para realizar las mediciones, que no necesariamente tiene las mismas características del servidor del SITVM. También dependen de la distribución de los viajes en las tarjetas sintéticas. Las tarjetas reales que registran viajes durante menos días pueden requerir menos tiempo en la solución exhaustiva; sin embargo, las tarjetas con viajes frecuentes representan un costo computacional considerablemente mayor.
 
 ### 4.2 Operación _X_
 _Pendiente para la entrega del 23 de noviembre._
@@ -562,7 +626,18 @@ _Pendiente para la entrega del 23 de noviembre._
 ### 6.1 Consumo energético
 
 #### Operación 4 · Tope tarifario
-> kWh = kW × h con 500 W, para la regla actual, la programación dinámica y la exhaustiva, declarados como estimaciones. Proyección a un año de la diferencia entre la regla actual y la programación dinámica: la operación corre en 12 cierres de mes.
+
+La energía se estima con **kWh = kW × h**, con el servidor de 0,5 kW que informa el caso y los tiempos de la extrapolación (§4.1). La operación corre una vez por mes, en el cierre, así que en un año son 12 ejecuciones.
+
+| Solución | Horas por cierre | kWh por cierre | kWh por año (12 cierres) |
+|---|---:|---:|---:|
+| Programación dinámica | 0,00185 | 0,00093 | 0,011 |
+| Regla actual | 0,00069 | 0,00035 | 0,004 |
+| Exhaustiva (estimada) | ≈ 69.300 | ≈ 34.600 | ≈ 416.000 |
+
+- **Regla actual frente a DP:** la DP consume unos **0,007 kWh más por año**. Es una cantidad despreciable, del orden de tener encendido un bombillo LED de 10 W durante menos de una hora. A cambio, la DP elimina los cobros de más que hoy genera la regla, como los 5.600 pesos del contraejemplo de §5.1.
+- **Exhaustiva:** sus 34.600 kWh por cierre y 416.000 kWh por año son una cifra hipotética, que solo muestra la magnitud del problema. **No representan un consumo operativo real**, porque cada cierre tomaría casi 8 años y la ejecución nunca terminaría dentro de la ventana de 4 horas: en la práctica, la solución exhaustiva no se puede operar.
+- **Supuestos:** son estimaciones. Se asume que el servidor consume sus 500 W solo durante el cálculo, y no se incluyen la lectura de datos, la escritura de las devoluciones ni el consumo del servidor en reposo, que es el mismo para todas las soluciones.
 
 #### Proceso completo
 _Pendiente para la entrega del 23 de noviembre._
@@ -588,20 +663,26 @@ _Pendiente para la entrega del 23 de noviembre._
 
 ## 8. Reproducción
 
+Los comandos se probaron desde una copia limpia del repositorio, con un entorno virtual nuevo.
+
 ```bash
-# 1. Crear y activar el entorno
+# 1. Clonar el repositorio
+git clone https://github.com/SESASAN/analisis-algoritmos-caso1-sitvm.git
+cd analisis-algoritmos-caso1-sitvm
+
+# 2. Crear y activar el entorno
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# 2. Pruebas de la operación 4
+# 3. Pruebas de la operación 4 (terminan con "Todas las pruebas pasaron")
 python src/tope_tarifario/pruebas.py
 
-# 3. Mediciones y gráficas (se guardan en graficas/tope_tarifario/)
+# 4. Mediciones y gráficas (menos de 30 s; se guardan en graficas/tope_tarifario/)
 python src/tope_tarifario/medicion.py
 ```
 
-> Ajusten los comandos a como quede el código (por ejemplo, `python -m src.tope_tarifario.pruebas` si usan imports de paquete).
+`medicion.py` imprime en la terminal los factores al duplicar `d`, la extrapolación a 950.000 tarjetas y la energía estimada, y vuelve a generar `tiempo_vs_n.png` y `operaciones_vs_n.png`. Como la semilla es fija, las instancias y el número de operaciones son siempre los mismos; los tiempos cambian un poco según el computador.
 
 ### Estructura del repositorio
 

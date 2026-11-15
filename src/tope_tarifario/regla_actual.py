@@ -1,4 +1,3 @@
-
 """Regla simplificada que el SITVM aplica hoy para el tope tarifario.
 
 Implementa la interpretación acordada por el equipo y documentada en el
@@ -17,6 +16,22 @@ def costo_regla_actual(viajes_por_dia: list[int]) -> int:
     Returns:
         El costo cobrado en pesos.
     """
+    costo, _ = costo_regla_actual_contando(viajes_por_dia)
+    return costo
+
+
+def costo_regla_actual_contando(
+    viajes_por_dia: list[int],
+) -> tuple[int, int]:
+    """Calcula lo que cobra la regla actual y cuántos días procesó.
+
+    Args:
+        viajes_por_dia: viajes de la tarjeta en cada día del mes.
+
+    Returns:
+        El costo cobrado en pesos y el número de días procesados.
+    """
+    operaciones = 0
     dias = len(viajes_por_dia)
     limite_mes = min(dias, 30)
     total = 0
@@ -30,6 +45,7 @@ def costo_regla_actual(viajes_por_dia: list[int]) -> int:
             viajes = viajes_por_dia[indice]
             costo_dia = min(viajes * PASAJE, DIARIO)
             costo_bloque += costo_dia
+            operaciones += 1
 
         total += min(costo_bloque, SEMANAL)
 
@@ -40,5 +56,6 @@ def costo_regla_actual(viajes_por_dia: list[int]) -> int:
     for indice in range(30, dias):
         viajes = viajes_por_dia[indice]
         total += min(viajes * PASAJE, DIARIO)
+        operaciones += 1
 
-    return total
+    return total, operaciones

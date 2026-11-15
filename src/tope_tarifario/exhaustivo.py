@@ -1,4 +1,3 @@
-
 """Solución exhaustiva del tope tarifario, usada como juez de la DP.
 
 Prueba todas las combinaciones de compras sin memoización ni tablas, por lo
@@ -17,7 +16,21 @@ def costo_exhaustivo(viajes_por_dia: list[int]) -> int:
     Returns:
         El costo mínimo en pesos.
     """
+    costo, _ = costo_exhaustivo_contando(viajes_por_dia)
+    return costo
+
+
+def costo_exhaustivo_contando(viajes_por_dia: list[int]) -> tuple[int, int]:
+    """Calcula el costo exhaustivo y cuántas combinaciones exploró.
+
+    Args:
+        viajes_por_dia: viajes de la tarjeta en cada día del mes.
+
+    Returns:
+        El costo mínimo en pesos y el número de llamadas a explorar.
+    """
     dias = len(viajes_por_dia)
+    llamadas = [0]
 
     def explorar(dia: int) -> int:
         """Prueba todas las compras posibles desde el día indicado.
@@ -28,6 +41,7 @@ def costo_exhaustivo(viajes_por_dia: list[int]) -> int:
         Returns:
             El menor costo posible desde ese día hasta el final.
         """
+        llamadas[0] += 1
         if dia >= dias:
             return 0
 
@@ -55,4 +69,5 @@ def costo_exhaustivo(viajes_por_dia: list[int]) -> int:
             costo_mensual,
         )
 
-    return explorar(0)
+    costo = explorar(0)
+    return costo, llamadas[0]
