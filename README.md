@@ -352,7 +352,7 @@ Para el desarrollo del proyecto se utilizaron las siguientes herramientas y bibl
 | `time` (biblioteca estándar) | Medición de los tiempos de ejecución mediante `time.perf_counter()`, implementada en [`medicion.py`](src/tope_tarifario/medicion.py). |
 | `matplotlib` | Generación de las gráficas de tiempo y número de operaciones frente al tamaño de la entrada. Es la única dependencia externa del proyecto. |
 | Entorno virtual (`venv`) | Aislamiento de las dependencias del proyecto para evitar conflictos con otros entornos de Python. La carpeta `.venv/` se excluye del repositorio. |
-| `requirements.txt` | Archivo que registra las dependencias necesarias para instalar y reproducir el entorno mediante `pip install -r requirements.txt` (§8). |
+| `requirements.txt` | Archivo que registra las dependencias necesarias para instalar y reproducir el entorno mediante `pip install -r requirements.txt` (8). |
 | Git y GitHub | Control de versiones y trabajo colaborativo. Cada integrante trabaja en ramas `feature/<nombre>` creadas a partir de `development`, y los cambios se integran en esta última. La rama `main` conserva la versión estable del proyecto. El archivo `.gitignore` excluye elementos como `.venv/`, `__pycache__/` y archivos de configuración de los editores. |
 
 Las estrategias, la solución exhaustiva y la regla actual se implementaron manualmente, sin utilizar bibliotecas de optimización ni herramientas externas que resuelvan el problema, de acuerdo con los requisitos del laboratorio. Además, el código sigue las convenciones de PEP 8 e incluye anotaciones de tipos (*type hints*) y documentación de funciones mediante *docstrings* con formato Google Style.
@@ -377,7 +377,7 @@ d ≤ T(d) ≤ 3d
 T(d) ∈ Θ(d)
 ```
 
-El espacio adicional es Θ(d), porque se almacenan las listas `costos` y `elecciones`, cada una con `d + 2` posiciones (§2.1).
+El espacio adicional es Θ(d), porque se almacenan las listas `costos` y `elecciones`, cada una con `d + 2` posiciones (2.1).
 
 **Exhaustiva (`exhaustivo.py`).** Esta estrategia no almacena los resultados de los subproblemas, por lo que vuelve a calcularlos cada vez que los encuentra. En cada día con viajes abre cuatro caminos: pagar los pasajes individuales y comprar un pase diario (ambos continúan en el día `t + 1`), comprar un pase semanal (continúa en el día `t + 7`) o comprar un pase mensual (continúa en el día `t + 30`).
 
@@ -405,7 +405,7 @@ El espacio adicional es Θ(d), correspondiente a la profundidad máxima de la pi
 |---|---|---|---|
 | Programación dinámica | Θ(d) | Θ(d) | Sí |
 | Exhaustiva | Ω(2^k), exponencial en los días con viajes | Θ(d) (pila de recursión) | Sí |
-| Regla actual | Θ(d) | Θ(1) | No (ver §5.1) |
+| Regla actual | Θ(d) | Θ(1) | No (ver 5.1) |
 
 **Contraste.** La programación dinámica y la regla actual pertenecen a la misma clase de complejidad temporal, Θ(d). Para un mes de 31 días, la programación dinámica realiza como máximo `3 · 31 = 93` operaciones, según el contador definido para esta estrategia.
 
@@ -430,16 +430,16 @@ Las pruebas se organizan en cinco grupos:
 | Grupo | Función | Qué verifica |
 |---|---|---|
 | Casos límite | `probar_casos_limite` | Periodo vacío (`[]`), un día sin viajes, un mes completo sin viajes, un solo día con 1, 2, 3 y 10 viajes, meses de 28 a 31 días con muchos viajes y un pase semanal que se sale del mes. |
-| Ejemplo a mano | `probar_ejemplo_a_mano` | La tabla de §2.2 fila por fila (C(1) a C(9)), las elecciones y las compras reconstruidas. |
+| Ejemplo a mano | `probar_ejemplo_a_mano` | La tabla de 2.2 fila por fila (C(1) a C(9)), las elecciones y las compras reconstruidas. |
 | Instancias aleatorias | `probar_instancias_aleatorias` | 160 instancias en las que la programación dinámica y la solución exhaustiva obtienen el mismo costo. |
 | Devolución exacta | `probar_devolucion_exacta` | Que la devolución sea exactamente igual a `cobrado - mínimo` y que nunca sea negativa. |
-| Contraejemplo | `probar_contraejemplo` | Que la regla actual cobre 45.500 pesos frente a los 39.900 pesos del óptimo en la instancia de §5.1. |
+| Contraejemplo | `probar_contraejemplo` | Que la regla actual cobre 45.500 pesos frente a los 39.900 pesos del óptimo en la instancia de 5.1. |
 
 **Casos límite.** Además de los casos sin viajes, se escogieron situaciones que permiten revisar los puntos en los que cambia la mejor decisión:
 
 - Un día con 2 viajes cuesta 7.800 pesos en pasajes. Con 3 viajes conviene comprar el pase diario de 9.500 pesos, ya que los pasajes individuales costarían 11.700 pesos.
 - Tres días con 3 viajes cuestan 28.500 pesos en pases diarios, valor que todavía es menor que el de un pase semanal. Con cuatro días, el costo de los pases diarios sería de 38.000 pesos, por lo que conviene comprar el pase semanal de 36.000 pesos.
-- En meses de 28, 29 y 30 días con muchos viajes, el costo corresponde al pase mensual de 135.000 pesos. En un mes de 31 días, el pase mensual no alcanza a cubrir el último día, por lo que el costo es de 135.000 + 9.500 = 144.500 pesos, de acuerdo con el supuesto de §1.5.
+- En meses de 28, 29 y 30 días con muchos viajes, el costo corresponde al pase mensual de 135.000 pesos. En un mes de 31 días, el pase mensual no alcanza a cubrir el último día, por lo que el costo es de 135.000 + 9.500 = 144.500 pesos, de acuerdo con el supuesto de 1.5.
 - Un mes con viajes únicamente durante los últimos cuatro días puede cubrirse con un pase semanal comprado el día 27, aunque este alcance hasta el día 33. Esto permite comprobar el límite `min(t + 7, d + 1)` de la recurrencia.
 
 **Instancias aleatorias.** Se probaron dos grupos de instancias:
@@ -611,10 +611,30 @@ El contraejemplo demuestra que la regla actual no siempre encuentra la combinaci
 
 #### Condición contraria
 
-Una estrategia voraz podría ser adecuada si las decisiones de compra no afectaran la cobertura de días posteriores y existiera una propiedad que garantizara que elegir la alternativa localmente más económica siempre conduce al costo global mínimo. En el problema actual esto no se cumple, porque los pases de varios días pueden cubrir viajes futuros y modificar el costo total.
+La regla actual decide cada bloque de días por separado: toma la opción más barata y no vuelve atrás, como haría una estrategia voraz. Esa forma de decidir sería suficiente, y daría el mínimo, en cualquiera de estos dos escenarios:
+
+- **Solo existen el pasaje sencillo y el pase diario.** Ningún producto cubre más de un día, así que lo que se compra un día no cambia lo que conviene comprar otro. El mínimo del mes es simplemente la suma del mínimo de cada día.
+- **Los pases son de calendario fijo.** Si el semanal solo pudiera usarse en las semanas 1–7, 8–14, 15–21, 22–28 y 29–30, y el mensual solo del día 1 al 30, cada bloque se podría decidir sin mirar los demás. En ese caso, la regla de bloques fijos del 1.5 daría exactamente el costo mínimo.
+
+En el SITVM no se cumple ninguna de las dos condiciones. El semanal y el mensual cubren días consecutivos a partir del día en que se compran, y ese día puede ser cualquiera. Por eso, una compra condiciona los días siguientes, y el mejor momento para empezar un pase depende de los viajes que vienen después. Es lo que muestra el contraejemplo: el semanal óptimo empieza el día 4 y no el día 1. Para encontrar ese punto de inicio hay que comparar los subproblemas de todos los días posibles, que es justamente lo que hace la programación dinámica.
 
 #### Recomendación
-> Qué estrategia adoptar, qué gana el SITVM frente a hoy y qué riesgo o límite debe conocer.
+
+Recomendamos que el SITVM liquide el tope tarifario con la programación dinámica y deje de usar la regla simplificada.
+
+**Qué gana frente a hoy:**
+
+- **Cumple la política del tope sin excepciones.** La DP siempre encuentra la combinación más barata, así que la devolución es exactamente la diferencia frente al mínimo, sin un peso de más ni de menos. La regla actual puede cobrar de más cuando los viajes de una persona no coinciden con los bloques fijos: 5.600 pesos en el contraejemplo de ocho días.
+- **Elimina la causa de las quejas sin costo adicional de tiempo.** Ya no hace falta tratar distinto a las tarjetas que más viajan, que hoy reciben la regla simplificada porque la exhaustiva no termina. Liquidar 950.000 tarjetas con la DP toma cerca de 6,7 s, menos del 0,1 % de la ventana de 4 h. La exhaustiva tardaría unos 8 años por cierre.
+- **El costo energético es despreciable.** La DP consume unos 0,007 kWh más al año que la regla actual (6.1). A cambio, todos los usuarios reciben lo que les corresponde.
+- **Deja trazabilidad.** Además del valor, la DP puede entregar la lista de compras que justifica cada liquidación. Sirve para responder una reclamación con el detalle de qué pases se consideraron.
+
+**Riesgos y límites que debe conocer:**
+
+- **Cambios de tarifa o de productos.** El tiempo crece de forma lineal con los días y con el número de productos, así que un pase nuevo (por ejemplo, uno quincenal) no compromete la ventana. Lo que sí cambia es el modelo: hay que agregar el producto a la recurrencia y volver a correr las pruebas contra la exhaustiva antes de usarlo en producción.
+- **Pases que cruzan el cierre de mes.** La solución supone que cada mes se liquida por separado (1.5). Si el SITVM reconoce un semanal comprado el día 28 que sigue vigente en el mes siguiente, la liquidación tendría que mirar los dos meses juntos. Esa regla de negocio debe confirmarse con Recaudo.
+- **Crecimiento del volumen.** El tiempo total crece en proporción al número de tarjetas. Aun si se multiplicaran por 100, la operación seguiría tomando del orden de minutos, muy lejos del límite de la ventana.
+- **Las cifras de tiempo vienen de nuestro computador.** El servidor del SITVM puede ser más rápido o más lento. Antes del primer cierre conviene medir en el servidor real; el margen es tan amplio que la conclusión no debería cambiar. También conviene ejecutar la DP sobre los registros de algunos meses reales para cuantificar el monto total que se debe devolver.
 
 ### 5.2 Operación _X_ y comparación general
 _Pendiente para la entrega del 23 de noviembre._
@@ -627,7 +647,7 @@ _Pendiente para la entrega del 23 de noviembre._
 
 #### Operación 4 · Tope tarifario
 
-La energía se estima con **kWh = kW × h**, con el servidor de 0,5 kW que informa el caso y los tiempos de la extrapolación (§4.1). La operación corre una vez por mes, en el cierre, así que en un año son 12 ejecuciones.
+La energía se estima con **kWh = kW × h**, con el servidor de 0,5 kW que informa el caso y los tiempos de la extrapolación (4.1). La operación corre una vez por mes, en el cierre, así que en un año son 12 ejecuciones.
 
 | Solución | Horas por cierre | kWh por cierre | kWh por año (12 cierres) |
 |---|---:|---:|---:|
@@ -635,7 +655,7 @@ La energía se estima con **kWh = kW × h**, con el servidor de 0,5 kW que infor
 | Regla actual | 0,00069 | 0,00035 | 0,004 |
 | Exhaustiva (estimada) | ≈ 69.300 | ≈ 34.600 | ≈ 416.000 |
 
-- **Regla actual frente a DP:** la DP consume unos **0,007 kWh más por año**. Es una cantidad despreciable, del orden de tener encendido un bombillo LED de 10 W durante menos de una hora. A cambio, la DP elimina los cobros de más que hoy genera la regla, como los 5.600 pesos del contraejemplo de §5.1.
+- **Regla actual frente a DP:** la DP consume unos **0,007 kWh más por año**. Es una cantidad despreciable, del orden de tener encendido un bombillo LED de 10 W durante menos de una hora. A cambio, la DP elimina los cobros de más que hoy genera la regla, como los 5.600 pesos del contraejemplo de 5.1.
 - **Exhaustiva:** sus 34.600 kWh por cierre y 416.000 kWh por año son una cifra hipotética, que solo muestra la magnitud del problema. **No representan un consumo operativo real**, porque cada cierre tomaría casi 8 años y la ejecución nunca terminaría dentro de la ventana de 4 horas: en la práctica, la solución exhaustiva no se puede operar.
 - **Supuestos:** son estimaciones. Se asume que el servidor consume sus 500 W solo durante el cálculo, y no se incluyen la lectura de datos, la escritura de las devoluciones ni el consumo del servidor en reposo, que es el mismo para todas las soluciones.
 
