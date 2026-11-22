@@ -510,41 +510,11 @@ Las estrategias, la solución exhaustiva y la regla actual se implementaron manu
 
 #### Complejidad temporal y espacial
 
-En este análisis, `d` representa el número de días del periodo y `k` corresponde al número de días en los que se realizaron viajes (`k ≤ d`).
+Se usa `d` para el número de días del periodo y `k` para los días con viajes (`k ≤ d`).
 
-**Programación dinámica (`estrategia.py`).** El ciclo recorre los días una sola vez, desde el día `d` hasta el día 1. En un día sin viajes, únicamente copia el valor de `C(t + 1)`. En cambio, en un día con viajes, compara tres opciones: pagar los viajes de ese día, comprar un pase semanal o comprar un pase mensual. Cada comparación tiene un costo de Θ(1), porque consulta una posición de la tabla que ya está calculada.
-
-El contador de `costo_minimo_contando` registra una operación por cada día sin viajes y tres por cada día con viajes. Por lo tanto, el total de operaciones se encuentra entre `d` y `3d`:
-
-```text
-T(d) = (d − k) · 1 + k · 3
-d ≤ T(d) ≤ 3d
-T(d) ∈ Θ(d)
-```
-
-El espacio adicional es Θ(d), porque se almacenan las listas `costos` y `elecciones`, cada una con `d + 2` posiciones (2.1).
-
-**Exhaustiva (`exhaustivo.py`).** Esta estrategia no almacena los resultados de los subproblemas, por lo que vuelve a calcularlos cada vez que los encuentra. En cada día con viajes abre cuatro caminos: pagar los pasajes individuales y comprar un pase diario (ambos continúan en el día `t + 1`), comprar un pase semanal (continúa en el día `t + 7`) o comprar un pase mensual (continúa en el día `t + 30`).
-
-Cuando todos los días tienen viajes, el número de llamadas cumple la siguiente recurrencia:
-
-```text
-T(d) = 2T(d − 1) + T(d − 7) + T(d − 30) + Θ(1)
-```
-
-Como `T(d) ≥ 2T(d − 1)`, al desarrollar la recurrencia nivel por nivel, como en un árbol de recursión, se obtiene una cota inferior de `2^d`. Es decir:
-
-```text
-T(d) ∈ Ω(2^d)
-```
-
-Esto significa que, cuando todos los días tienen viajes, cada día adicional duplica como mínimo el trabajo de la solución exhaustiva. Los días sin viajes no generan caminos nuevos, porque la función simplemente avanza al siguiente día. Por esta razón, en términos generales, el costo crece de forma exponencial respecto a `k`, es decir, los días con viajes, y no necesariamente respecto a todos los días del periodo.
-
-Para un mes de 31 días con viajes todos los días, esto representa más de `2^31 ≈ 2.100 millones` de llamadas para una sola tarjeta.
-
-El espacio adicional es Θ(d), correspondiente a la profundidad máxima de la pila de llamadas recursivas, ya que no se utiliza ninguna tabla para almacenar resultados.
-
-**Regla actual (`regla_actual.py`).** Recorre cada día una sola vez: los días 1 a 30 se procesan dentro de sus bloques semanales y, si existe, el día 31 se procesa por separado. Por lo tanto, su complejidad temporal es Θ(d). Solo utiliza variables auxiliares como `total`, `costo_bloque` y los índices, por lo que su espacio adicional es Θ(1).
+- **Programación dinámica (`estrategia.py`).** Recorre los días una sola vez. Un día sin viajes copia `C(t + 1)` y un día con viajes compara tres opciones, cada una en Θ(1). El contador de `costo_minimo_contando` registra `T(d) = (d − k) + 3k`, por lo que `d ≤ T(d) ≤ 3d` y el tiempo es **Θ(d)**. El espacio adicional es Θ(d), por las listas `costos` y `elecciones` (2.1).
+- **Exhaustiva (`exhaustivo.py`).** No almacena los resultados de los subproblemas. En cada día con viajes abre cuatro caminos: pagar los pasajes individuales o comprar el diario (ambos avanzan a `t + 1`), comprar el semanal (`t + 7`) o el mensual (`t + 30`). Cuando todos los días tienen viajes, la recurrencia es `T(d) = 2T(d − 1) + T(d − 7) + T(d − 30) + Θ(1)`. Como `T(d) ≥ 2T(d − 1)`, cada día con viajes al menos duplica el trabajo y `T(d) ∈ Ω(2^d)`. Los días sin viajes solo avanzan al siguiente, por lo que el crecimiento es exponencial en los días con viajes. En un mes de 31 días con viajes diarios, supera las `2^31 ≈ 2.100 millones` de llamadas por tarjeta. El espacio adicional es Θ(d), por la profundidad de la pila de recursión.
+- **Regla actual (`regla_actual.py`).** Procesa cada día una sola vez dentro de su bloque: tiempo **Θ(d)** y espacio adicional Θ(1).
 
 | Estrategia | Tiempo | Espacio adicional | ¿Resultado exacto? |
 |---|---|---|---|
@@ -552,59 +522,29 @@ El espacio adicional es Θ(d), correspondiente a la profundidad máxima de la pi
 | Exhaustiva | Ω(2^k), exponencial en los días con viajes | Θ(d) (pila de recursión) | Sí |
 | Regla actual | Θ(d) | Θ(1) | No (ver 5.1) |
 
-**Contraste.** La programación dinámica y la regla actual pertenecen a la misma clase de complejidad temporal, Θ(d). Para un mes de 31 días, la programación dinámica realiza como máximo `3 · 31 = 93` operaciones, según el contador definido para esta estrategia.
-
-Esto demuestra que encontrar el costo mínimo mediante programación dinámica no implica aumentar el orden de complejidad temporal respecto a la regla actual. Ambas estrategias recorren los días del periodo una sola vez. La diferencia principal está en el resultado: mientras la regla actual puede generar cobros superiores al mínimo, la programación dinámica encuentra la combinación de menor costo.
-
-Por otro lado, la solución exhaustiva también encuentra el costo mínimo, pero su crecimiento exponencial hace que resulte poco práctica para tarjetas que registran viajes durante muchos días. Esto explica por qué una solución de este tipo no sería adecuada para procesar el volumen real de tarjetas dentro de la ventana operativa.
-
-Cabe resaltar que la programación dinámica obtiene el mismo resultado exacto que la solución exhaustiva porque calcula cada subproblema una sola vez y almacena su resultado para reutilizarlo, evitando repetir cálculos innecesariamente.
+**Contraste.** La programación dinámica y la regla actual tienen el mismo orden de complejidad, Θ(d): para un mes de 31 días, la programación dinámica realiza como máximo `3 · 31 = 93` operaciones, según el contador definido. Encontrar el costo mínimo no aumenta el orden de complejidad, sino que mejora el resultado. La exhaustiva también encuentra el mínimo, pero su crecimiento exponencial la hace poco práctica para tarjetas con viajes frecuentes.
 
 #### Verificación
 
-La verificación se realiza mediante el archivo [`pruebas.py`](src/tope_tarifario/pruebas.py), en el que se utiliza la solución exhaustiva como referencia para comparar los resultados obtenidos por la programación dinámica. Si ambas estrategias obtienen el mismo costo en diferentes instancias, se obtiene evidencia de que la tabla de programación dinámica se está construyendo correctamente y de que sus resultados coinciden con los de la solución exhaustiva.
-
-Las instancias aleatorias se generan mediante [`datos.py`](src/tope_tarifario/datos.py), utilizando la semilla fija 2026. De esta manera, cualquier persona que ejecute las pruebas obtendrá exactamente las mismas instancias. Para ejecutarlas, se utiliza el siguiente comando:
+[`pruebas.py`](src/tope_tarifario/pruebas.py) utiliza la solución exhaustiva como referencia para comparar los resultados de la programación dinámica. Si ambas coinciden en diferentes instancias, se obtiene evidencia de que la tabla se calcula correctamente. Las instancias aleatorias se generan en [`datos.py`](src/tope_tarifario/datos.py) con la semilla fija 2026, por lo que son reproducibles. Para ejecutar las pruebas:
 
 ```bash
 python src/tope_tarifario/pruebas.py
 ```
 
-Las pruebas se organizan en cinco grupos:
-
 | Grupo | Función | Qué verifica |
 |---|---|---|
-| Casos límite | `probar_casos_limite` | Periodo vacío (`[]`), un día sin viajes, un mes completo sin viajes, un solo día con 1, 2, 3 y 10 viajes, meses de 28 a 31 días con muchos viajes y un pase semanal que se sale del mes. |
-| Ejemplo a mano | `probar_ejemplo_a_mano` | La tabla de 2.2 fila por fila (C(1) a C(9)), las elecciones y las compras reconstruidas. |
-| Instancias aleatorias | `probar_instancias_aleatorias` | 160 instancias en las que la programación dinámica y la solución exhaustiva obtienen el mismo costo. |
-| Devolución exacta | `probar_devolucion_exacta` | Que la devolución sea exactamente igual a `cobrado - mínimo` y que nunca sea negativa. |
-| Contraejemplo | `probar_contraejemplo` | Que la regla actual cobre $45.500 frente a los $39.900 del óptimo en la instancia de 5.1. |
+| Casos límite | `probar_casos_limite` | Periodo vacío, días sin viajes, un día con 1, 2, 3 y 10 viajes, meses de 28 a 31 días con muchos viajes y un semanal que se sale del mes. |
+| Ejemplo a mano | `probar_ejemplo_a_mano` | La tabla de 2.2 fila por fila, las elecciones y las compras reconstruidas. |
+| Instancias aleatorias | `probar_instancias_aleatorias` | 160 instancias en las que la programación dinámica y la exhaustiva coinciden: 120 periodos de 1 a 12 días y 40 meses de 28 a 31 días con 6 a 12 días de viajes. |
+| Devolución exacta | `probar_devolucion_exacta` | Que la devolución sea exactamente `cobrado − mínimo` y nunca negativa, con valores calculados a mano y 30 tarjetas aleatorias. |
+| Contraejemplo | `probar_contraejemplo` | Que la regla actual cobre $45.500 frente a los $39.900 del óptimo (5.1). |
 
-**Casos límite.** Además de los casos sin viajes, se escogieron situaciones que permiten revisar los puntos en los que cambia la mejor decisión:
+Los casos límite se enfocan en los puntos donde cambia la mejor decisión: con 3 viajes en un día conviene el diario; con 4 días de 3 viajes conviene el semanal; y en un mes de 31 días el costo es $135.000 + $9.500 = $144.500 (1.5).
 
-- Un día con 2 viajes cuesta $7.800 en pasajes. Con 3 viajes conviene comprar el pase diario de $9.500, ya que los pasajes individuales costarían $11.700.
-- Tres días con 3 viajes cuestan $28.500 en pases diarios, valor que todavía es menor que el de un pase semanal. Con cuatro días, el costo de los pases diarios sería de $38.000, por lo que conviene comprar el pase semanal de $36.000.
-- En meses de 28, 29 y 30 días con muchos viajes, el costo corresponde al pase mensual de $135.000. En un mes de 31 días, el pase mensual no alcanza a cubrir el último día, por lo que el costo es de $135.000 + $9.500 = $144.500, de acuerdo con el supuesto de 1.5.
-- Un mes con viajes únicamente durante los últimos cuatro días puede cubrirse con un pase semanal comprado el día 27, aunque este alcance hasta el día 33. Esto permite comprobar el límite `min(t + 7, d + 1)` de la recurrencia.
+En cada instancia también se comprueba que las compras reconstruidas cubran todos los viajes y sumen exactamente `C(1)`, recalculando el costo con `costo_de_compras` sin consultar la tabla; que la regla actual nunca cobre menos que el mínimo; y que la lista de entrada no se modifique. Todas las pruebas pasan.
 
-**Instancias aleatorias.** Se probaron dos grupos de instancias:
-
-- **120 periodos cortos:** de 1 a 12 días, con 10 instancias por tamaño y viajes en casi todos los días. Se utilizan estos tamaños porque la solución exhaustiva puede terminar su ejecución en un tiempo razonable.
-- **40 meses reales:** de 28 a 31 días, con solo 6 a 12 días con viajes. Como la solución exhaustiva crece según los días con viajes y no únicamente según la duración del mes, estos casos permiten ejecutar las pruebas e incluir situaciones relacionadas con el pase mensual y el día 31.
-
-En cada instancia no solo se compara el costo obtenido por ambas estrategias. También se revisa que:
-
-- Las compras reconstruidas mediante `reconstruir_compras` cubran todos los días con viajes y sumen exactamente C(1). Para comprobarlo, se utiliza la función auxiliar `costo_de_compras`, que vuelve a calcular el costo a partir de las compras realizadas, sin consultar la tabla de programación dinámica.
-- La regla actual nunca cobre menos que el costo mínimo, porque siempre construye una combinación válida de productos.
-- La lista de entrada no se modifique después de ejecutar las funciones.
-
-**Devolución exacta.** Esta es una de las restricciones principales del problema. Se comprueba mediante valores calculados manualmente: si se cobraron $45.500, se deben devolver $5.600; si se cobró exactamente el mínimo o un valor inferior, la devolución debe ser 0. También se realizan pruebas con 30 tarjetas aleatorias en las que el valor cobrado corresponde al calculado por la regla actual. En todos los casos, el valor cobrado menos la devolución debe coincidir exactamente con el costo mínimo obtenido por la solución exhaustiva.
-
-**Resultado.** Todas las pruebas pasan y el script finaliza mostrando el mensaje `Todas las pruebas pasaron`.
-
-**Limitación de la verificación.** La solución exhaustiva toma las decisiones de la misma forma que la programación dinámica, pero sin almacenar los resultados de los subproblemas. Por esta razón, permite detectar errores en los índices, el orden de llenado de la tabla y la reconstrucción de las compras, pero no necesariamente errores en el modelo del problema, como establecer incorrectamente la duración de un pase.
-
-Para reducir este riesgo, también se utilizan el ejemplo resuelto manualmente y los casos límite, cuyos resultados se calcularon sin depender del código implementado.
+**Limitación.** La exhaustiva toma decisiones basadas en el mismo modelo que la programación dinámica, por lo que permite detectar errores en los índices, el orden de llenado y la reconstrucción de compras, pero no necesariamente errores del modelo, como establecer incorrectamente la duración de un pase. Este riesgo se reduce con el ejemplo a mano y los casos límite, cuyos resultados se calcularon independientemente del código.
 
 #### Diseño de los experimentos
 
@@ -709,9 +649,77 @@ Por el contrario, la solución exhaustiva no sería viable para este volumen de 
 Estas estimaciones dependen del computador utilizado para realizar las mediciones, que no necesariamente tiene las mismas características del servidor del SITVM. También dependen de la distribución de los viajes en las tarjetas sintéticas. Las tarjetas reales que registran viajes durante menos días pueden requerir menos tiempo en la solución exhaustiva; sin embargo, las tarjetas con viajes frecuentes representan un costo computacional considerablemente mayor.
 
 ### 4.2 Operación 3 · Franjas de congestión
-_Pendiente para la entrega del 23 de noviembre._
 
----
+#### Complejidad temporal y espacial
+
+Se usa `n` para el número de intervalos de la serie de una estación. Las tres estrategias cuentan la misma operación elemental: cada intervalo sumado, para que sus contadores se puedan comparar directamente.
+
+- **Fuerza bruta (`fuerza_bruta.py`).** Para cada inicio, recorre todos los finales posibles y acumula la suma sin volver a sumar el tramo desde cero. El tramo que empieza en `i` requiere `n − i` sumas, por lo que el total es:
+
+  ```text
+  T(n) = n + (n − 1) + … + 1 = n(n + 1) / 2
+  T(n) ∈ Θ(n²)
+  ```
+
+  Solo guarda la suma actual y el mejor tramo, así que el espacio adicional es Θ(1).
+
+- **Dividir y vencer (`dividir_y_vencer.py`).** Su recurrencia `T(n) = 2T(n/2) + Θ(n)` se resuelve con el teorema maestro (2.3), dando **Θ(n log n)**. El contador lo confirma: para `n` potencia de 2, suma exactamente `n(log₂ n + 1)` intervalos, porque hay `log₂ n + 1` niveles y en cada uno se suman `n` intervalos. El espacio adicional es Θ(log n), correspondiente a la profundidad de la pila, ya que trabaja con índices y no copia sublistas.
+
+- **Kadane (`kadane.py`).** Es una programación dinámica sobre los intervalos. Si `M(i)` es la mayor suma de un tramo que termina en el intervalo `i`, ese tramo puede empezar en `i` o extender el mejor tramo que termina en `i − 1`:
+
+  ```text
+  M(0) = saldo₀
+  M(i) = max(saldoᵢ, M(i − 1) + saldoᵢ)
+  respuesta = max(M(0), M(1), …, M(n − 1))
+  ```
+
+  Cada `M(i)` depende solo de `M(i − 1)`, por lo que basta una variable (`suma_actual`) en lugar de una tabla. Si la suma acumulada anterior no es positiva, conviene empezar un tramo nuevo. La serie se recorre una vez, con una suma por intervalo: `T(n) = n`, tiempo **Θ(n)** y espacio adicional **Θ(1)**. Con el ejemplo de 2.3:
+
+  | `i` | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+  |---|---|---|---|---|---|---|---|---|
+  | Saldo | 3 | −5 | 4 | 2 | −1 | 6 | −8 | 2 |
+  | `M(i)` | 3 | −2 | **4** (empieza de nuevo) | 6 | 5 | **11** | 3 | 5 |
+  | Mejor hasta `i` | (0, 0, 3) | (0, 0, 3) | (2, 2, 4) | (2, 3, 6) | (2, 3, 6) | **(2, 5, 11)** | (2, 5, 11) | (2, 5, 11) |
+
+  En el índice 2, la suma acumulada era −2, así que Kadane descarta lo anterior y empieza en 2. Obtiene la misma respuesta que dividir y vencer: el tramo de 2 a 5 con 11 pasajeros, con solo 8 sumas.
+
+| Estrategia | Tiempo | Espacio adicional | Sumas para el ejemplo (`n = 8`) | Sumas por estación (`n ≈ 166.000`) |
+|---|---|---|---:|---:|
+| Fuerza bruta | Θ(n²) | Θ(1) | 36 | ≈ 1,38 × 10¹⁰ |
+| Dividir y vencer | Θ(n log n) | Θ(log n) | 32 | ≈ 3,06 × 10⁶ |
+| Kadane | Θ(n) | Θ(1) | 8 | 166.000 |
+
+**Contraste.** Las tres estrategias son exactas; lo que cambia es su crecimiento. Para el histórico de dos años de una estación, Kadane realiza aproximadamente 83.000 veces menos sumas que la fuerza bruta y 18 veces menos que dividir y vencer. Al duplicar `n`, la fuerza bruta cuadruplica su trabajo, dividir y vencer lo multiplica por algo más de 2 y Kadane exactamente por 2. Para las 80 estaciones, Kadane suma unos 13 millones de intervalos en total, frente a unos 1,1 × 10¹² de la fuerza bruta.
+
+#### Verificación
+
+[`pruebas.py`](src/congestion/pruebas.py) utiliza `mayor_suma_directa` como referencia, que suma cada tramo desde cero con `sum`. No reutiliza sumas entre tramos, por lo que es independiente de las tres estrategias, aunque su costo es Θ(n³) y solo sirve para series pequeñas. Las series aleatorias se generan en [`datos.py`](src/congestion/datos.py), con saldos enteros entre −60 y 60 y la semilla fija 2026, por lo que son reproducibles. Para ejecutar las pruebas:
+
+```bash
+python src/congestion/pruebas.py
+```
+
+| Grupo | Función | Qué verifica |
+|---|---|---|
+| Casos límite | `probar_casos_limite` | Serie vacía (las tres lanzan `ValueError`), un intervalo positivo o negativo, todos negativos, todos positivos, ceros y empates. |
+| Ejemplo a mano | `probar_ejemplo_a_mano` | Que las tres estrategias devuelvan `(2, 5, 11)` en el ejemplo de 2.3. |
+| Series aleatorias | `probar_series_aleatorias` | 200 series, 5 por cada tamaño de 1 a 40 intervalos, en las que las tres estrategias obtienen la mayor suma. |
+| Contadores | `probar_contadores` | Que la fuerza bruta sume `n(n + 1)/2` intervalos, Kadane `n` y dividir y vencer `n(log₂ n + 1)` para potencias de 2, hasta 256. |
+
+**Casos límite.** Con todos los saldos negativos, por ejemplo `[−4, −2, −7, −1, −9]`, las tres devuelven `(3, 3, −1)`: el intervalo menos negativo y nunca un tramo vacío con suma 0, como exige el contrato (3.2). Con todos positivos (`[2, 5, 1]`), el tramo es la serie completa, `(0, 2, 8)`.
+
+**Restricción del negocio: el tramo de mayor acumulación.** En cada serie se comprueba, para las tres estrategias, que:
+
+- La suma devuelta sea igual a la mayor suma calculada por el juez. Ningún tramo de la serie acumula más pasajeros.
+- El tramo sea válido: `0 ≤ inicio ≤ fin < n` y `sum(saldos[inicio:fin + 1])` sea exactamente la suma reportada.
+- La variante `_contando` devuelva el mismo tramo que la función oficial, como pide el contrato.
+- La serie de entrada no se modifique.
+
+**Empates.** Cuando dos tramos tienen la misma suma, cualquiera es válido (3.2). Por eso, en los casos con empates y en las series aleatorias se compara la suma y se valida el tramo, en lugar de exigir los mismos índices. Por ejemplo, en `[5, −5, 5]` las estrategias pueden devolver `(0, 0, 5)`, `(2, 2, 5)` o `(0, 2, 5)`, y las tres respuestas son correctas.
+
+**Resultado.** Todas las pruebas pasan y el script termina con `Todas las pruebas pasaron`.
+
+**Limitación.** Las series aleatorias llegan a 40 intervalos porque el juez es cúbico. Los errores que solo aparecieran en series largas se cubren con la medición, más adelante en esta sección, que verifica que las estrategias coincidan en los tamaños donde la fuerza bruta alcanza a ejecutarse. Además, los saldos sintéticos son uniformes y no reproducen los patrones reales de las horas pico; eso no afecta la exactitud, pero sí el tramo que se encuentra en cada serie.
 
 ## 5. Análisis comparativo
 
