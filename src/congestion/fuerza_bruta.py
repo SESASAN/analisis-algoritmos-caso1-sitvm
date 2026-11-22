@@ -1,4 +1,3 @@
-
 """Tramo de mayor congestión de una estación por fuerza bruta.
 
 Cada posición de la serie es el saldo neto de la plataforma en un intervalo
