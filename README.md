@@ -1093,7 +1093,40 @@ En conclusión, la selección de Kadane para la detección de congestión y de p
 ---
 
 ## 7. Conclusiones
-_Pendiente para la entrega del 23 de noviembre._
+
+### Principales hallazgos
+
+**Operación 4 · Tope tarifario**
+
+- La programación dinámica permite encontrar el costo mínimo exacto con una complejidad de Θ(d), equivalente a la de la regla actual. Para un mes de 31 días, requiere como máximo 93 operaciones. Su exactitud se verificó frente a la solución exhaustiva en 160 instancias, sin necesidad de evaluar todas las combinaciones posibles de compra.
+- Se comprobó que la regla actual puede generar cobros superiores al valor óptimo. En el contraejemplo analizado, el cobro fue de $45.500, mientras que el costo mínimo era de $39.900. La programación dinámica permite identificar y corregir esta diferencia de $5.600.
+- Se estima que la liquidación de las 950.000 tarjetas tomaría aproximadamente 6,7 segundos, frente a los 2,5 segundos de la regla actual. Esta diferencia es insignificante frente a la ventana de procesamiento de 4 horas y representa un incremento energético de apenas 0,007 kWh al año.
+
+**Operación 3 · Franjas de congestión**
+
+- La estrategia de dividir y vencer permitió reducir la complejidad del problema de Θ(n²) a Θ(n log n). Para el histórico de una estación, requiere aproximadamente 3,06 millones de sumas, frente a los 1,38 × 10¹⁰ de la fuerza bruta, lo que representa cerca de 4.500 veces menos operaciones. Además, al trabajar con índices, su consumo de memoria adicional es de Θ(log n).
+- El algoritmo de Kadane obtuvo mejores resultados al resolver el problema en una sola pasada, con una complejidad de Θ(n) en tiempo y Θ(1) en espacio. En comparación con la fuerza bruta, realiza aproximadamente 83.000 veces menos sumas y, frente a dividir y vencer, alrededor de 18 veces menos.
+- Las tres estrategias obtuvieron la misma suma máxima en las 200 series aleatorias evaluadas, identificando tramos válidos y sin modificar los datos de entrada. Esto demuestra que las estrategias optimizadas mantienen la exactitud de la solución de referencia.
+- Con Kadane, el análisis del histórico completo de las 80 estaciones, cada una con 166.000 intervalos, puede realizarse en menos de un segundo, frente a las aproximadamente 15 horas estimadas para la fuerza bruta. Esto permitiría a Planeación analizar toda la red sin depender de muestras de estaciones.
+
+**Mediciones y consumo energético**
+
+- Los resultados experimentales fueron consistentes con las complejidades teóricas. Al duplicar el tamaño de entrada, las operaciones de la fuerza bruta aumentaron por un factor de 4, las de dividir y vencer por aproximadamente 2,11 y las de Kadane por 2. Los tiempos de ejecución presentaron un comportamiento similar. En la operación 4, la solución exhaustiva mostró un crecimiento exponencial, al aumentar casi al doble su trabajo por cada día adicional.
+- Ejecutar diariamente la operación 3 mediante fuerza bruta sobre toda la red representaría un consumo estimado de 2.776 kWh al año, casi el doble del consumo anual reportado para todo el proceso nocturno actual (más de 1.460 kWh). En contraste, la implementación de Kadane reduce este consumo a un valor prácticamente despreciable.
+
+### Lecciones aprendidas
+
+- **Una mayor precisión no implica necesariamente un mayor costo computacional.** En la operación 4, la estrategia exacta conserva el mismo orden de complejidad que la aproximada. La principal diferencia está en la calidad del resultado, ya que permite calcular el cobro correcto sin representar un incremento significativo en el tiempo de ejecución.
+- **Identificar la estructura del problema permite encontrar soluciones más eficientes.** Aunque dividir y vencer representa una mejora importante frente a la fuerza bruta, Kadane aprovecha la estructura del problema mediante programación dinámica y consigue mejores resultados tanto en tiempo como en memoria.
+- **Las mejoras de eficiencia son más evidentes a medida que aumenta el volumen de datos.** Para una entrada de 8 intervalos, dividir y vencer realiza 32 sumas frente a las 36 de la fuerza bruta. Esta diferencia es pequeña en conjuntos reducidos, pero se vuelve significativa al procesar volúmenes como el histórico de dos años.
+- **El conteo de operaciones complementa las mediciones de tiempo.** Los tiempos de ejecución pueden verse afectados por factores externos, como el sistema operativo o el costo fijo de las funciones. En cambio, el conteo de operaciones permite evaluar el crecimiento de los algoritmos de manera más estable y contrastarlo con la teoría, incluso cuando los tiempos medidos son de pocos microsegundos.
+- **Definir un contrato común antes de implementar facilita la integración y comparación de soluciones.** Establecer previamente las entradas, las salidas y el comportamiento ante casos especiales, como una serie con todos los saldos negativos, permitió que las tres estrategias desarrolladas por diferentes integrantes del equipo pudieran compararse bajo los mismos criterios. En este caso, se acordó devolver el intervalo menos negativo en lugar de un tramo vacío.
+
+### Recomendaciones para futuras mejoras
+
+- **Optimizar las operaciones 1 y 2.** Ambas mantienen una complejidad cuadrática y se ejecutan diariamente sobre 1.400.000 validaciones. Por su volumen de procesamiento, representan una prioridad para reducir el tiempo total del proceso nocturno y conseguir que se ajuste a la ventana disponible de 4 horas.
+- **Realizar pruebas en el servidor real del SITVM.** Es necesario medir el rendimiento de las estrategias en el entorno de producción y ejecutarlas sobre datos históricos reales de varios meses. Esto permitiría validar los tiempos estimados y determinar el monto total de las devoluciones generadas por los errores en el cálculo del tope tarifario.
+- **Validar las reglas de negocio pendientes con el área de Recaudo.** Es importante aclarar situaciones especiales, como los pases que atraviesan el cierre de mes, y mantener las pruebas automatizadas para verificar el comportamiento del sistema ante futuros cambios en las tarifas o en los productos disponibles.
 
 ---
 
