@@ -10,7 +10,7 @@
 
 **Operaciones abordadas:**
 - Operación 4: liquidación del tope tarifario (Laboratorio 4, programación dinámica)
-- Operación _X_: _por definir_ (entrega del 23 de noviembre)
+- Operación 3: detección de las franjas de congestión (entrega del 23 de noviembre)
 
 ---
 
@@ -62,7 +62,7 @@ Al cierre de cada mes, el sistema debe revisar cada tarjeta personalizada para v
 | Ventana de ejecución | horas | 4 (00:00 – 04:00) |
 | Potencia del servidor | vatios | ≈ 500 W |
 
-#### Operación _X_
+#### Operación 3 · Franjas de congestión
 _Pendiente para la entrega del 23 de noviembre._
 
 ### 1.3 Operaciones críticas del proceso
@@ -176,13 +176,7 @@ Una solución exhaustiva vuelve a calcular C(8) y C(9) cada vez que encuentra es
 
 **Costo total: 39.900.** Los resultados de los días 5 al 8 no se utilizan en la reconstrucción, porque el semanal comprado el día 4 ya cubre esos viajes.
 
-**Comparación con la regla actual:**
-
-- La primera semana, del día 1 al 7, suma 38.500 y se aplica el tope de 36.000.
-- El día 8 pertenece a otro bloque y se cobra por separado: 9.500.
-- **El total cobrado por la regla es 45.500, es decir, 5.600 pesos más que el costo óptimo.**
-
-Esto sucede porque la regla actual solo aplica el descuento semanal al bloque fijo de los días 1 a 7, mientras que la mejor opción es comenzar el semanal en el día 4. Si se pagara cada día de forma independiente, el total sería de 48.000.
+**Comparación con la regla actual:** en esta misma instancia la regla cobra 45.500, es decir, 5.600 pesos más que el costo óptimo, porque solo aplica el semanal sobre el bloque fijo de los días 1 a 7 (ver §5.1).
 
 #### Recurrencia
 
@@ -254,12 +248,7 @@ función exh(viajes, t):
 
 La estrategia exhaustiva evalúa todas las combinaciones posibles de compra de productos tarifarios, sin almacenar los resultados de los subproblemas ya resueltos. Su complejidad espacial es Θ(d), la cual se encuentra determinada por la profundidad máxima de las llamadas recursivas. El análisis de su complejidad temporal se desarrolla en la sección 4.1.
 
-**Regla actual (línea base).**
-
-1. Para cada día con viajes, se calcula hoy(t).
-2. Los días del 1 al 30 se dividen en semanas fijas: 1–7, 8–14, 15–21, 22–28 y 29–30. Cada bloque tiene un cobro máximo de 36.000.
-3. Después de aplicar los topes semanales, el total de los días 1 a 30 no puede superar 135.000. Esto equivale a aplicar un pase mensual que comienza el día 1.
-4. Si existe un día 31, sus viajes se cobran por separado utilizando hoy(t).
+**Regla actual (línea base).** Sigue la interpretación descrita en §1.5.
 
 ```text
 función regla_actual(viajes):
@@ -279,7 +268,7 @@ función regla_actual(viajes):
 
 Su tiempo de ejecución es Θ(d), igual que el de la programación dinámica. La diferencia entre ambas está en el resultado que calculan, no en el costo computacional.
 
-**Alcance de la regla.** Esta interpretación está pensada para liquidar un solo mes, es decir, cuando d ≤ 31. A partir del día 31, los viajes se cobran con hoy(t), sin aplicar nuevos topes. En la Serie 2 de `medicion.py`, la regla se ejecuta hasta d = 100.000 únicamente para medir su tiempo de ejecución, que sigue siendo Θ(d). Para periodos mayores a 31 días, sus cobros no se comparan con el óptimo. Por ejemplo, con `[3] * 60`, la regla cobra 420.000, mientras que la DP calcula 270.000.
+**Alcance de la regla.** Esta interpretación está pensada para liquidar un solo mes (d ≤ 31). En la Serie 2 de `medicion.py` la regla se ejecuta con periodos mayores únicamente para medir su tiempo de ejecución; sus cobros no se comparan con el óptimo.
 
 **Diagrama de dependencias de la DP**
 
@@ -419,21 +408,17 @@ Código en [`src/tope_tarifario/`](src/tope_tarifario/):
 
 1. **Tabla calculada con un ciclo, sin recursión.** Python tiene un límite de profundidad para las llamadas recursivas, y cada llamada también agrega un costo. Por eso se utiliza un ciclo `for t in range(d, 0, -1)`, que deja claro el orden de cálculo y permite medir periodos de cientos de miles de días.
 
-2. **Listas indexadas desde 1 hasta d + 1.** De esta forma, el código sigue la misma numeración que la recurrencia. La posición 0 no se utiliza y `costos[d+1] = 0` queda establecida desde la inicialización.
+2. **Listas indexadas desde 1 hasta d + 1.** De esta forma, el código sigue la misma numeración que la recurrencia: `costos[d+1] = 0` queda establecida desde la inicialización y `min(t + dias, d + 1)` evita acceder a posiciones que no existen cuando un pase se sale del periodo.
 
-3. **Control del límite de los pases con `min(t + dias, d + 1)`.** Esto evita acceder a posiciones que no existen en la lista y representa el supuesto de que cada periodo se liquida de manera independiente.
+3. **Precios y duraciones definidos como datos.** Los precios se encuentran en las constantes `PASAJE`, `DIARIO`, `SEMANAL` y `MENSUAL`. Los pases de varios días se organizan en la tupla `PASES`, que almacena su nombre, precio y duración. También existe el diccionario `DURACION`, utilizado para reconstruir las compras. Así, los valores se mantienen separados de la lógica principal.
 
-4. **Uso de enteros para los precios.** Todos los valores se manejan en pesos enteros para obtener devoluciones exactas.
+4. **Desempate mediante comparación estricta.** Se utiliza `<` al comparar los costos. Si dos alternativas tienen el mismo precio, se conserva la que se evaluó primero. Por ejemplo, para `[3] * 31`, comprar el diario el día 1 y el mensual el día 2 cuesta lo mismo que comprar el mensual el día 1 y el diario el día 31: 144.500 pesos. Sin embargo, gana la primera combinación porque se evalúa antes. Esto no modifica el costo mínimo, pero sí determina qué compras aparecen en la reconstrucción.
 
-5. **Precios y duraciones definidos como datos.** Los precios se encuentran en las constantes `PASAJE`, `DIARIO`, `SEMANAL` y `MENSUAL`. Los pases de varios días se organizan en la tupla `PASES`, que almacena su nombre, precio y duración. También existe el diccionario `DURACION`, utilizado para reconstruir las compras. Así, los valores se mantienen separados de la lógica principal.
+5. **Separación del costo y la reconstrucción.** La función `costo_minimo` devuelve únicamente el valor entero que solicita el esqueleto. Las compras se recuperan utilizando `reconstruir_compras`, que sigue las elecciones guardadas y salta los días cubiertos por cada pase. Las pruebas comprueban que las compras cubran todos los viajes y sumen exactamente C(1).
 
-6. **Desempate mediante comparación estricta.** Se utiliza `<` al comparar los costos. Si dos alternativas tienen el mismo precio, se conserva la que se evaluó primero. Por ejemplo, para `[3] * 31`, comprar el diario el día 1 y el mensual el día 2 cuesta lo mismo que comprar el mensual el día 1 y el diario el día 31: 144.500 pesos. Sin embargo, gana la primera combinación porque se evalúa antes. Esto no modifica el costo mínimo, pero sí determina qué compras aparecen en la reconstrucción.
+6. **Cálculo de la devolución.** `liquidar_tope` utiliza la expresión `max(0, cobrado - costo_minimo(viajes))`, garantizando que el valor devuelto nunca sea negativo.
 
-7. **Separación del costo y la reconstrucción.** La función `costo_minimo` devuelve únicamente el valor entero que solicita el esqueleto. Las compras se recuperan utilizando `reconstruir_compras`, que sigue las elecciones guardadas y salta los días cubiertos por cada pase. Las pruebas comprueban que las compras cubran todos los viajes y sumen exactamente C(1).
-
-8. **Cálculo de la devolución.** `liquidar_tope` utiliza la expresión `max(0, cobrado - costo_minimo(viajes))`, garantizando que el valor devuelto nunca sea negativo.
-
-9. **Contador de operaciones y reutilización de la recurrencia.** Las funciones `costo_minimo` y `costo_minimo_contando` utilizan `_llenar_tablas`, que contiene la única implementación de la recurrencia. Así se evita duplicar la lógica. El contador registra una operación por cada día sin viajes y tres por cada día con viajes, correspondientes a las alternativas evaluadas. Por esta razón, la función `costo_minimo` también realiza el conteo, aunque no devuelva ese valor. Este trabajo adicional consiste en incrementar un entero por día y se mantiene dentro de Θ(d).
+7. **Contador de operaciones y reutilización de la recurrencia.** Las funciones `costo_minimo` y `costo_minimo_contando` utilizan `_llenar_tablas`, que contiene la única implementación de la recurrencia. Así se evita duplicar la lógica. El contador registra una operación por cada día sin viajes y tres por cada día con viajes, correspondientes a las alternativas evaluadas. Por esta razón, la función `costo_minimo` también realiza el conteo, aunque no devuelva ese valor. Este trabajo adicional consiste en incrementar un entero por día y se mantiene dentro de Θ(d).
 
 #### Decisiones de implementación de `exhaustivo.py` y `regla_actual.py`
 
@@ -680,7 +665,7 @@ Por el contrario, la solución exhaustiva no sería viable para este volumen de 
 
 Estas estimaciones dependen del computador utilizado para realizar las mediciones, que no necesariamente tiene las mismas características del servidor del SITVM. También dependen de la distribución de los viajes en las tarjetas sintéticas. Las tarjetas reales que registran viajes durante menos días pueden requerir menos tiempo en la solución exhaustiva; sin embargo, las tarjetas con viajes frecuentes representan un costo computacional considerablemente mayor.
 
-### 4.2 Operación _X_
+### 4.2 Operación 3 · Franjas de congestión
 _Pendiente para la entrega del 23 de noviembre._
 
 ---
