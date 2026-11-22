@@ -109,8 +109,14 @@ Para desarrollar la solución del caso de liquidación del tope tarifario, el eq
 
 **Espacio:** Θ(d), donde d representa la cantidad de días del periodo. Si únicamente se necesitara conocer el costo mínimo, bastaría con conservar una ventana de 31 posiciones, porque ningún pase consulta más de 30 días hacia adelante. Sin embargo, se almacena toda la tabla para poder reconstruir las compras y revisar cada liquidación.
 
-#### Operación _X_
-_Pendiente para la entrega del 23 de noviembre._
+#### Operación 3 · Franjas de congestión
+
+Para la operación 3 bastan dos estructuras:
+
+- **Lista de saldos (`list[int]`).** Contiene la serie de una estación: una posición por intervalo de 5 minutos, con el saldo neto de la plataforma (pasajeros que entraron menos los que los trenes alcanzaron a evacuar), que puede ser negativo. La lista se recibe y se recorre, pero nunca se modifica.
+- **Tupla del tramo (`Tramo = tuple[int, int, int]`).** Representa la respuesta como `(inicio, fin, suma)`, con índices desde 0 e inclusivos. Es inmutable, así que un subproblema no puede alterar por accidente el resultado de otro, y ocupa espacio constante.
+
+Dividir y vencer no necesita copiar sublistas. Cada subproblema se identifica con dos enteros, `bajo` y `alto`, que delimitan su rango dentro de la misma lista original. Si cada llamada recibiera una copia (`saldos[bajo:medio + 1]`), cada nivel de la recursión copiaría en total n saldos. Eso suma Θ(n log n) de trabajo adicional, pero la memoria máxima ocupada por las copias sería Θ(n), porque solo se mantienen las copias de una rama de recursión y sus tamaños forman una suma geométrica. Con índices, la memoria adicional se reduce a la pila de llamadas, de profundidad Θ(log n). Además, como la serie nunca se duplica ni se altera, se respeta la restricción de no modificar los datos originales.
 
 ### 2.2 Operación 4 · Tope tarifario
 
@@ -285,8 +291,112 @@ C(t) ──hoy────▶ C(t+1)
 orden de cálculo: C(d+1) → C(d) → … → C(2) → C(1)
 ```
 
-### 2.3 Operación _X_
-_Pendiente para la entrega del 23 de noviembre._
+### 2.3 Operación 3 · Franjas de congestión
+
+#### Por qué el problema admite dividir y vencer
+
+Si la serie se parte por la mitad, en `medio`, el tramo de mayor suma solo puede estar en uno de tres lugares:
+
+1. **Completamente en la mitad izquierda** (`bajo … medio`).
+2. **Completamente en la mitad derecha** (`medio + 1 … alto`).
+3. **Cruzando el punto medio:** empieza en la izquierda y termina en la derecha, así que contiene obligatoriamente a `medio` y a `medio + 1`.
+
+Los dos primeros casos son el mismo problema sobre la mitad de los datos, y se resuelven recursivamente. El tercero no es un problema recursivo: un tramo que cruza el medio es la unión de dos piezas independientes. Una es el mejor sufijo de la mitad izquierda, que termina en `medio`; la otra es el mejor prefijo de la mitad derecha, que empieza en `medio + 1`. Cada pieza se encuentra con un solo recorrido lineal desde el medio hacia afuera.
+
+La respuesta del rango es la mayor de las tres. Como cualquier tramo consecutivo necesariamente pertenece a uno de estos casos, no se omite ninguna posibilidad y el algoritmo encuentra el máximo exacto, no una aproximación.
+
+#### Recurrencia
+
+Cada llamada sobre n intervalos hace dos llamadas sobre n/2 y un trabajo lineal para el tramo cruzado:
+
+```text
+T(1) = Θ(1)
+T(n) = 2·T(n/2) + Θ(n)
+```
+
+Por el teorema maestro, con a = 2, b = 2 y f(n) = Θ(n), estamos en el caso 2, así que T(n) = Θ(n log n). Intuitivamente, hay log₂ n niveles de recursión y en cada nivel los recorridos de cruce suman, entre todos, n intervalos. El espacio adicional es Θ(log n), por la pila de llamadas. Para el histórico de dos años (n ≈ 166.000), la profundidad es de unas 18 llamadas.
+
+#### Pseudocódigo
+
+```text
+TRAMO-MÁXIMO(saldos, bajo, alto):
+    si bajo == alto:
+        devolver (bajo, alto, saldos[bajo])
+    medio ← (bajo + alto) // 2
+    izq   ← TRAMO-MÁXIMO(saldos, bajo, medio)
+    der   ← TRAMO-MÁXIMO(saldos, medio + 1, alto)
+    cruce ← TRAMO-CRUZADO(saldos, bajo, medio, alto)
+    devolver el de mayor suma entre izq, der y cruce
+
+TRAMO-CRUZADO(saldos, bajo, medio, alto):
+    mejor_izq ← −∞
+    inicio ← medio
+    suma ← 0
+    para i desde medio bajando hasta bajo:
+        suma ← suma + saldos[i]
+        si suma > mejor_izq:
+            mejor_izq ← suma
+            inicio ← i
+
+    mejor_der ← −∞
+    fin ← medio + 1
+    suma ← 0
+    para j desde medio + 1 hasta alto:
+        suma ← suma + saldos[j]
+        si suma > mejor_der:
+            mejor_der ← suma
+            fin ← j
+
+    devolver (inicio, fin, mejor_izq + mejor_der)
+```
+
+#### Ejemplo resuelto a mano
+
+Serie de 8 intervalos (índices 0 a 7):
+
+| Índice | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|---|
+| Saldo | 3 | −5 | 4 | 2 | −1 | 6 | −8 | 2 |
+
+La tabla muestra, para cada rango, los tres candidatos y el ganador. Los rangos de un solo intervalo son casos base y devuelven su propio saldo.
+
+| Rango | Medio | Izquierdo | Derecho | Cruzado | Ganador |
+|---|---:|---|---|---|---|
+| [0, 1] | 0 | (0, 0, 3) | (1, 1, −5) | 3 + (−5) → (0, 1, −2) | **(0, 0, 3)** |
+| [2, 3] | 2 | (2, 2, 4) | (3, 3, 2) | 4 + 2 → (2, 3, 6) | **(2, 3, 6)** |
+| [4, 5] | 4 | (4, 4, −1) | (5, 5, 6) | −1 + 6 → (4, 5, 5) | **(5, 5, 6)** |
+| [6, 7] | 6 | (6, 6, −8) | (7, 7, 2) | −8 + 2 → (6, 7, −6) | **(7, 7, 2)** |
+| [0, 3] | 1 | (0, 0, 3) | (2, 3, 6) | Sufijo izq. −2 (desde 0) + prefijo der. 6 (hasta 3) → (0, 3, 4) | **(2, 3, 6)** |
+| [4, 7] | 5 | (5, 5, 6) | (7, 7, 2) | Sufijo izq. 6 (desde 5) + prefijo der. −6 (hasta 7) → (5, 7, 0) | **(5, 5, 6)** |
+| [0, 7] | 3 | (2, 3, 6) | (5, 5, 6) | Sufijo izq. 6 (desde 2) + prefijo der. 5 (hasta 5) → **(2, 5, 11)** | **(2, 5, 11)** |
+
+En el último nivel, el cruce recorre hacia la izquierda desde el índice 3: las sumas acumuladas son 2, 6, 1 y 4, y la mejor es 6, empezando en el índice 2. Hacia la derecha desde el índice 4, las sumas son −1, 5, −3 y −1, y la mejor es 5, terminando en el índice 5.
+
+**Respuesta: el tramo de los intervalos 2 a 5, con 4 + 2 − 1 + 6 = 11 pasajeros acumulados.** Ninguna de las dos mitades por sí sola encuentra este tramo; por eso hace falta el caso cruzado.
+
+Conteo de operaciones del ejemplo, con el contador del código (cada intervalo sumado):
+
+- Casos base: 8.
+- Cruces de rangos de tamaño 2: 4 × 2 = 8.
+- Cruces de rangos de tamaño 4: 2 × 4 = 8.
+- Cruce del rango de tamaño 8: 8.
+
+Total: **32 = n·(log₂ n + 1)**. La fuerza bruta, que evalúa todos los tramos sumando incrementalmente, hace n(n + 1)/2 = **36**. Con 8 intervalos casi no hay diferencia; la ventaja aparece al crecer n.
+
+#### Cómo reduce el consumo energético frente a la fuerza bruta
+
+El servidor consume una potencia aproximadamente constante, de unos 500 W bajo carga, así que la energía de un proceso es E = P × t, y el tiempo de ejecución influye directamente en el consumo. Reducir el tiempo de procesamiento puede reducir la energía utilizada.
+
+La fuerza bruta evalúa los n(n + 1)/2 tramos posibles. Dividir y vencer hace del orden de n(log₂ n + 1) sumas. Para el histórico de dos años de una estación (n ≈ 166.000):
+
+| Estrategia | Operaciones por estación | Para las 80 estaciones |
+|---|---:|---:|
+| Fuerza bruta, Θ(n²) | ≈ 1,38 × 10¹⁰ | ≈ 1,1 × 10¹² |
+| Dividir y vencer, Θ(n log n) | ≈ 3,06 × 10⁶ | ≈ 2,4 × 10⁸ |
+
+Dividir y vencer hace unas **4.500 veces menos operaciones**, y la proporción crece con la serie: si el histórico se duplica, la fuerza bruta cuadruplica su trabajo, mientras que dividir y vencer lo multiplica por poco más de 2.
+
+Con las mediciones de ejecución se podrá estimar el consumo energético de ambas estrategias utilizando E = P × t, considerando la potencia del servidor y el tiempo que tarda cada algoritmo. Esto permite evaluar cuánto recurso se requiere para procesar el histórico completo de las estaciones.
 
 ---
 
