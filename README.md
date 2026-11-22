@@ -870,7 +870,44 @@ Es importante aclarar que el incremento del 30 % en las validaciones no signific
 En consecuencia, las estrategias de dividir y vencer y programación dinámica ofrecen mejores condiciones para responder al crecimiento esperado que los procedimientos exhaustivos actuales. Sin embargo, su viabilidad definitiva debe comprobarse mediante las mediciones experimentales y las estimaciones de ejecución para los volúmenes proyectados.
 
 ### 6.3 Consecuencias sobre las personas
-_Pendiente para la entrega del 23 de noviembre._
+
+Las decisiones algorítmicas del SITVM pueden tener consecuencias directas sobre las personas que utilizan el transporte público y sobre las áreas encargadas de su operación. Un resultado incorrecto puede generar cobros indebidos, pérdida de información o decisiones de planificación basadas en datos equivocados. De igual manera, un procesamiento que no termine dentro del tiempo establecido puede afectar la disponibilidad de información necesaria para iniciar el servicio.
+
+**Errores en la eliminación de validaciones duplicadas**
+
+Si el algoritmo elimina una validación legítima al confundirla con un registro duplicado, el viaje realizado podría no quedar correctamente registrado. Por el contrario, si una validación repetida permanece en el sistema, podría ocasionar un cobro adicional por un viaje que no se realizó. En ambos casos, el usuario puede verse afectado económicamente y tener que realizar reclamaciones para corregir la información.
+
+Para reducir estos riesgos, la identificación de duplicados debe respetar exactamente la condición establecida en el caso: dos validaciones son iguales únicamente cuando coinciden el identificador del validador, el identificador de la tarjeta y la marca de tiempo. Esto evita eliminar registros que representan viajes diferentes. También es importante conservar el archivo original sin modificaciones, de manera que sea posible revisar los datos recibidos ante cualquier inconsistencia.
+
+**Errores en la liquidación del tope tarifario**
+
+Un cálculo incorrecto del tope tarifario puede ocasionar que una persona pague más de lo que corresponde por los viajes realizados durante el periodo. Esta situación puede afectar especialmente a los usuarios frecuentes y a quienes cuentan con tarifas diferenciales, como estudiantes, adultos mayores y personas con discapacidad.
+
+Para prevenir estos errores, se recomienda la programación dinámica, que calcula el costo mínimo exacto y permite reconstruir las compras de productos que justifican el resultado. La comparación con la solución exhaustiva en diferentes instancias y las pruebas de devolución exacta permiten verificar que el valor cobrado menos la devolución corresponda al costo mínimo. De esta manera, se busca evitar que los usuarios asuman cobros superiores a los establecidos.
+
+**Errores en la detección de franjas de congestión**
+
+La operación de detección de congestión también tiene consecuencias sobre las personas, aunque su afectación es principalmente indirecta. Si el algoritmo identifica un tramo que no corresponde al de mayor acumulación de pasajeros, el área de Planeación podría tomar decisiones basadas en información incorrecta. Esto puede afectar la distribución de recursos y la planificación de la operación en las estaciones.
+
+Para reducir este riesgo, la estrategia debe encontrar el tramo consecutivo cuya suma sea realmente la máxima, respetando incluso los casos en los que todos los balances netos sean negativos. En este proyecto se recomienda el algoritmo de Kadane, que resuelve el problema en tiempo Θ(n) y espacio adicional Θ(1), sin perder exactitud. La comparación con las estrategias de fuerza bruta y dividir y vencer permite utilizar soluciones de referencia para verificar los resultados.
+
+**Retrasos en el procesamiento nocturno**
+
+El tiempo de ejecución también puede afectar a los usuarios. El SITVM dispone de una ventana de cuatro horas, entre las 00:00 y las 04:00, para completar el procesamiento nocturno. Si las operaciones no terminan dentro de ese periodo, la información podría no estar disponible oportunamente para las áreas que la necesitan. Una de las consecuencias más importantes sería que los validadores no contaran con las listas actualizadas de tarjetas reportadas como robadas o extraviadas antes de la apertura de las estaciones a las 04:30.
+
+Esto puede generar dificultades en los controles del sistema y afectar tanto al personal encargado de la operación como a los usuarios. Por esta razón, no basta con que los algoritmos produzcan resultados correctos: también deben hacerlo dentro del tiempo disponible. La selección de estrategias con menor complejidad y la medición de sus tiempos de ejecución permiten evaluar este requisito.
+
+**Medidas para reducir las consecuencias**
+
+A partir de los riesgos identificados, el diseño del sistema contempla los siguientes criterios:
+
+- **Exactitud:** las operaciones deben cumplir las condiciones establecidas en el caso, evitando eliminar validaciones legítimas, calcular cobros superiores al mínimo o identificar incorrectamente el tramo de mayor congestión.
+- **Verificación:** se deben utilizar casos límite, ejemplos calculados manualmente e instancias de prueba para comparar los resultados de las estrategias implementadas con soluciones de referencia.
+- **Trazabilidad:** el archivo original debe conservarse sin modificaciones, de modo que los resultados puedan revisarse y compararse con los registros recibidos.
+- **Cumplimiento de los tiempos:** las mediciones experimentales y las estimaciones de ejecución permiten evaluar si las estrategias pueden completar su trabajo dentro de la ventana nocturna.
+- **Revisión de inconsistencias:** los resultados que no cumplan las condiciones esperadas deben poder identificarse antes de ser utilizados en procesos que afecten los cobros o la operación del transporte.
+
+En conclusión, la eficiencia de los algoritmos debe estar acompañada de exactitud, trazabilidad y cumplimiento de los tiempos establecidos. Estas condiciones permiten reducir el riesgo de cobros incorrectos, pérdida de información y decisiones operativas equivocadas, procurando que la optimización del SITVM también contribuya a proteger a las personas que dependen del servicio.
 
 ### 6.4 Marco normativo y buenas prácticas
 _Pendiente para la entrega del 23 de noviembre._
