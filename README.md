@@ -208,18 +208,18 @@ Una solución exhaustiva vuelve a calcular C(8) y C(9) cada vez que encuentra es
 
 **Interpretación de los resultados:**
 
-- **Día 5:** la diferencia entre pagar por separado y comprar el semanal es de apenas 300 pesos. Los pagos diarios de los días 5 al 8 suman 36.300, mientras que el semanal cuesta 36.000.
-- **Día 1:** comprar el semanal desde este día resulta más caro por dos motivos: cubre los días 2 y 3, que no tienen viajes, y no alcanza a cubrir el día 8, que debe pagarse por separado (C(8) = 9.500). Por eso, esta alternativa cuesta 36.000 + 9.500 = 45.500. Es mejor pagar el pasaje del primer día y comenzar el semanal en el día 4.
+- **Día 5:** la diferencia entre pagar por separado y comprar el semanal es de apenas $300. Los pagos diarios de los días 5 al 8 suman $36.300, mientras que el semanal cuesta $36.000.
+- **Día 1:** comprar el semanal desde este día resulta más caro por dos motivos: cubre los días 2 y 3, que no tienen viajes, y no alcanza a cubrir el día 8, que debe pagarse por separado (C(8) = $9.500). Por eso, esta alternativa cuesta $36.000 + $9.500 = $45.500. Es mejor pagar el pasaje del primer día y comenzar el semanal en el día 4.
 
 **Compras seleccionadas.** Para reconstruirlas, se comienza en el día 1 y se sigue la opción que ganó en cada fila:
 
-- **Día 1:** se compra un pasaje de 3.900.
+- **Día 1:** se compra un pasaje de $3.900.
 - **Días 2 y 3:** no se compra nada porque no hay viajes.
-- **Día 4:** se compra un semanal de 36.000. Este cubre hasta el día 10, por lo que ya no es necesario realizar más compras durante el periodo.
+- **Día 4:** se compra un semanal de $36.000. Este cubre hasta el día 10, por lo que ya no es necesario realizar más compras durante el periodo.
 
-**Costo total: 39.900.** Los resultados de los días 5 al 8 no se utilizan en la reconstrucción, porque el semanal comprado el día 4 ya cubre esos viajes.
+**Costo total: $39.900.** Los resultados de los días 5 al 8 no se utilizan en la reconstrucción, porque el semanal comprado el día 4 ya cubre esos viajes.
 
-**Comparación con la regla actual:** en esta misma instancia la regla cobra 45.500, es decir, 5.600 pesos más que el costo óptimo, porque solo aplica el semanal sobre el bloque fijo de los días 1 a 7 (ver §5.1).
+**Comparación con la regla actual:** en esta misma instancia la regla cobra $45.500, es decir, $5.600 pesos más que el costo óptimo, porque solo aplica el semanal sobre el bloque fijo de los días 1 a 7 (ver 5.1).
 
 #### Recurrencia
 
@@ -236,7 +236,7 @@ C(t)   = mín{ hoy(t) + C(t+1),
 **Significado de cada elemento:**
 
 - **C(t):** representa el costo mínimo para cubrir los viajes desde el día t hasta el final del periodo. Se asume que los días anteriores ya están pagos y que ninguna compra anterior cubre el día actual. El resultado final es C(1), y la devolución se calcula como `max(0, cobrado − C(1))`.
-- **hoy(t):** calcula la alternativa más económica para pagar únicamente el día t, comparando los pasajes individuales con el pase diario. A partir de 3 viajes conviene el diario, porque 11.700 es mayor que 9.500.
+- **hoy(t):** calcula la alternativa más económica para pagar únicamente el día t, comparando los pasajes individuales con el pase diario. A partir de 3 viajes conviene el diario, porque $11.700 es mayor que $9.500.
 - **Las tres alternativas:** cada opción suma el precio de la compra actual al costo mínimo de los días que todavía quedan sin cubrir. Si se paga solo el día actual, se continúa desde t + 1; con el semanal, desde t + 7; y con el mensual, desde t + 30.
 - **El límite d + 1:** evita consultar posiciones fuera de la tabla cuando un pase supera la duración del periodo. En ese caso, se llega al caso base.
 - **Días sin viajes:** no requieren compras, por lo que se conserva el costo calculado para el día siguiente.
@@ -996,7 +996,7 @@ python src/tope_tarifario/medicion.py
 
 ## 9. Referencias
 
-Congreso de Colombia. (1996). *Ley 336 de 1996. Por la cual se adopta el Estatuto Nacional de Transporte.* Función Pública. https://www1.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=346
+Congreso de Colombia. (1996). *Ley 336 de 1996. Por la cual se adopta el Estatuto Nacional de Transporte.* Función Pública. https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=346
 
 Congreso de Colombia. (2012). *Ley 1581 de 2012. Por la cual se dictan disposiciones generales para la protección de datos personales.* Función Pública. https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981
 
