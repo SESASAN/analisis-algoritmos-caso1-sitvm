@@ -834,7 +834,40 @@ La energía se estima con **kWh = kW × h**, con el servidor de 0,5 kW que infor
 _Pendiente para la entrega del 23 de noviembre._
 
 ### 6.2 Preguntas de impacto del caso (personas, normativa, crecimiento)
-_Pendiente para la entrega del 23 de noviembre._
+
+Las decisiones relacionadas con la optimización del proceso nocturno del SITVM no tienen únicamente consecuencias sobre el rendimiento computacional. También pueden afectar la economía de los usuarios, la privacidad de su información y la capacidad del sistema para responder al crecimiento de la demanda. A continuación, se analizan las tres situaciones planteadas en el caso.
+
+**Personas: ¿quién asume el costo cuando una validación se cobra dos veces o cuando el tope se liquida mal?**
+
+Cuando una validación se registra más de una vez y genera un cobro duplicado, el primer afectado es el usuario, porque se descuenta de su tarjeta un valor que no corresponde a un viaje adicional. De igual manera, cuando el cálculo del tope tarifario no identifica la combinación más económica de productos, el usuario puede terminar pagando más de lo establecido por la política tarifaria.
+
+Estas situaciones pueden tener un impacto económico mayor en las personas que utilizan el transporte público con frecuencia, ya que realizan más viajes y, por lo tanto, están expuestas a que los errores se acumulen. También deben considerarse los estudiantes, adultos mayores y personas con discapacidad, quienes cuentan con tarifas diferenciales y pueden tener menores ingresos. Para estos usuarios, incluso valores aparentemente pequeños pueden representar una afectación importante dentro de sus gastos cotidianos.
+
+Aunque el sistema de transporte debe asumir la responsabilidad de corregir los cobros incorrectos y atender las reclamaciones, el usuario soporta inicialmente las consecuencias del error, tanto económicas como administrativas. Por esta razón, las estrategias algorítmicas deben garantizar que las validaciones legítimas no se eliminen y que los cobros correspondan exactamente a los viajes realizados y a las condiciones tarifarias establecidas.
+
+**Normativa: ¿qué disposiciones condicionan la solución y cómo deben respetarse?**
+
+El procesamiento de la información del SITVM debe considerar dos aspectos principales: la protección de los datos personales de los usuarios y la regulación del servicio público de transporte.
+
+En materia de privacidad, la Ley 1581 de 2012 establece disposiciones para el tratamiento de datos personales y reconoce los derechos de los titulares sobre la información registrada en bases de datos. Esto resulta relevante porque los registros del sistema contienen identificadores de tarjetas, estaciones y fechas y horas de validación. Al relacionar estos datos es posible reconstruir recorridos y reconocer patrones de desplazamiento de una persona. Por lo tanto, su tratamiento debe responder a finalidades legítimas y contar con medidas que eviten el acceso, uso o divulgación no autorizados.
+
+En cuanto al servicio de transporte, la Ley 336 de 1996 establece el marco general del Estatuto Nacional de Transporte, mientras que el Decreto 1079 de 2015 reglamenta el sector y contempla disposiciones sobre la prestación del transporte público y la competencia de las autoridades para regular sus condiciones y tarifas. En consecuencia, el cálculo de los cobros y las devoluciones no puede depender de decisiones arbitrarias del algoritmo, sino que debe respetar las tarifas y condiciones autorizadas por la autoridad competente.
+
+Frente a estas disposiciones, el diseño del sistema debe limitar el acceso a la información personal, utilizar los registros únicamente para los fines operativos correspondientes y conservar el archivo original de validaciones sin modificaciones. Además, debe permitir verificar los resultados del procesamiento y reconstruir las operaciones realizadas ante una reclamación. Estas medidas contribuyen a proteger la privacidad, mantener la trazabilidad y evitar cobros que no correspondan a las condiciones del servicio.
+
+**Crecimiento: ¿cómo se comportan las estrategias recomendadas si entra una tercera línea de cable y las validaciones diarias crecen un 30 %?**
+
+El caso establece que el SITVM procesa aproximadamente 1.400.000 validaciones en un día habitual. Si se incorpora una tercera línea de cable y el volumen aumenta un 30 %, el sistema tendría que procesar aproximadamente 1.820.000 validaciones diarias, es decir, 420.000 registros adicionales.
+
+Este incremento representa un desafío para la capacidad de procesamiento, especialmente porque el sistema trabaja sobre un único servidor de aproximadamente 500 W y dispone de una ventana nocturna limitada. Por esta razón, las estrategias recomendadas deben presentar un comportamiento que permita manejar el crecimiento sin comprometer la exactitud de los resultados.
+
+Para la operación de detección de congestión, la estrategia de fuerza bruta presenta una complejidad temporal cuadrática, \(O(n^2)\), mientras que la estrategia de dividir y vencer presenta una complejidad de \(O(n\log n)\). Por lo tanto, cuando aumenta el tamaño de la secuencia de entrada, la estrategia de dividir y vencer ofrece un crecimiento del tiempo de ejecución considerablemente menor. Esto resulta importante para el análisis de los históricos de las estaciones, que pueden alcanzar aproximadamente 166.000 intervalos por estación.
+
+Por otra parte, para la liquidación del tope tarifario, la programación dinámica evita explorar repetidamente todas las combinaciones posibles de productos. Su procesamiento por tarjeta depende de la cantidad de días del mes, que se mantiene entre 28 y 31. Por ello, el costo de resolver una tarjeta no aumenta directamente con el número de validaciones diarias; sin embargo, si el crecimiento también implica más tarjetas activas que deban liquidarse, el costo total de la operación aumentará en proporción a la cantidad de tarjetas procesadas.
+
+Es importante aclarar que el incremento del 30 % en las validaciones no significa necesariamente que todas las entradas de las operaciones aumenten en esa misma proporción. Por ejemplo, la cantidad de intervalos de cinco minutos de una estación depende del periodo analizado, mientras que el número de tarjetas que deben liquidarse depende de cuántos usuarios estén activos durante el mes.
+
+En consecuencia, las estrategias de dividir y vencer y programación dinámica ofrecen mejores condiciones para responder al crecimiento esperado que los procedimientos exhaustivos actuales. Sin embargo, su viabilidad definitiva debe comprobarse mediante las mediciones experimentales y las estimaciones de ejecución para los volúmenes proyectados.
 
 ### 6.3 Consecuencias sobre las personas
 _Pendiente para la entrega del 23 de noviembre._
