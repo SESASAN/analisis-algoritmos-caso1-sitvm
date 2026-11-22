@@ -910,10 +910,74 @@ A partir de los riesgos identificados, el diseño del sistema contempla los sigu
 En conclusión, la eficiencia de los algoritmos debe estar acompañada de exactitud, trazabilidad y cumplimiento de los tiempos establecidos. Estas condiciones permiten reducir el riesgo de cobros incorrectos, pérdida de información y decisiones operativas equivocadas, procurando que la optimización del SITVM también contribuya a proteger a las personas que dependen del servicio.
 
 ### 6.4 Marco normativo y buenas prácticas
-_Pendiente para la entrega del 23 de noviembre._
+
+El diseño de las soluciones algorítmicas del SITVM debe considerar las disposiciones relacionadas con la protección de los datos personales y la regulación del servicio público de transporte en Colombia. Estas normas son relevantes porque el sistema procesa información asociada a las tarjetas de los usuarios, registra sus desplazamientos y realiza cálculos que determinan los valores que deben pagar por el servicio.
+
+**Ley 1581 de 2012 · Protección de datos personales**
+
+La Ley 1581 de 2012 establece disposiciones generales para la protección de datos personales y reconoce el derecho de las personas a conocer, actualizar y rectificar la información que se encuentre registrada sobre ellas en bases de datos. Su aplicación es importante para el SITVM porque los registros de validación contienen identificadores de tarjetas, estaciones y marcas de tiempo. Aunque estos campos no necesariamente muestran por sí solos el nombre de una persona, pueden relacionarse con un usuario y permitir identificar sus recorridos y hábitos de desplazamiento.
+
+El artículo 4 establece principios que deben respetarse durante el tratamiento de esta información:
+
+- **Finalidad:** los datos deben utilizarse para propósitos legítimos y previamente definidos. En el SITVM, la información de las validaciones debe utilizarse para las actividades propias del procesamiento, como la eliminación de duplicados, la liquidación tarifaria y el análisis de congestión.
+- **Veracidad o calidad:** la información debe ser completa, exacta, actualizada y comprobable. Esto se relaciona directamente con la necesidad de no eliminar validaciones legítimas ni modificar incorrectamente los registros recibidos.
+- **Acceso y circulación restringida:** la información personal debe estar disponible únicamente para las personas autorizadas, de acuerdo con las condiciones establecidas por la ley.
+- **Seguridad:** deben adoptarse medidas técnicas, humanas y administrativas para evitar la pérdida, adulteración, consulta o utilización no autorizada de los registros.
+- **Confidencialidad:** quienes intervengan en el tratamiento de los datos deben mantener la reserva de la información personal.
+
+En relación con estos principios, el proyecto establece que el archivo original de validaciones debe conservarse sin modificaciones, lo que permite mantener la integridad de los registros recibidos y facilitar su verificación. También se considera una buena práctica limitar el acceso a la información y evitar que los datos asociados a las tarjetas sean utilizados para propósitos diferentes a los establecidos para el sistema.
+
+**Ley 336 de 1996 y Decreto 1079 de 2015 · Regulación del transporte público**
+
+La Ley 336 de 1996 adopta el Estatuto Nacional de Transporte y establece el marco general para la regulación y reglamentación de los diferentes modos de transporte público en Colombia. Esta disposición resulta relevante porque las operaciones del SITVM intervienen en procesos relacionados con la prestación del servicio, el registro de los viajes y el cálculo de los cobros a los usuarios.
+
+Por su parte, el Decreto 1079 de 2015 compila la reglamentación del sector transporte. En sus disposiciones sobre transporte público urbano y metropolitano contempla la regulación del servicio y establece aspectos relacionados con la competencia de las autoridades para definir las condiciones de prestación y las tarifas.
+
+Estas disposiciones son importantes para la operación de liquidación del tope tarifario, ya que el algoritmo no debe establecer valores de cobro por decisión propia ni modificar las condiciones tarifarias. Su función consiste en aplicar correctamente las tarifas y los productos definidos para el sistema, identificando la combinación de menor costo que corresponda a los viajes realizados por cada usuario.
+
+Por esta razón, la programación dinámica debe utilizar los valores tarifarios establecidos en el caso y garantizar que el resultado corresponda al costo mínimo permitido. Además, la reconstrucción de las compras permite explicar cómo se obtuvo el valor liquidado y facilita la revisión de posibles diferencias.
+
+**Buenas prácticas aplicadas al diseño algorítmico**
+
+Además del cumplimiento de las disposiciones normativas, el desarrollo considera buenas prácticas que contribuyen a mantener la confiabilidad y trazabilidad de la información:
+
+- **Conservación de los datos originales:** las estrategias trabajan sobre los datos de entrada sin modificar el archivo original. Esto permite mantener un registro de referencia para revisar los resultados y detectar inconsistencias.
+- **Exactitud de los resultados:** las operaciones deben respetar las condiciones definidas en el problema. La eliminación de duplicados no debe descartar validaciones diferentes, la liquidación tarifaria debe encontrar el costo mínimo y la detección de congestión debe identificar el tramo de mayor suma.
+- **Verificación de las soluciones:** se utilizan pruebas con casos límite, ejemplos calculados manualmente y comparación entre estrategias cuando existe una solución de referencia. Esto permite detectar errores antes de considerar los resultados como válidos.
+- **Control del acceso a la información:** como recomendación para una implementación en producción, los registros que permitan identificar los desplazamientos de los usuarios deben estar disponibles únicamente para las personas y procesos autorizados.
+- **Uso limitado de la información:** los datos de validación deben emplearse para las finalidades operativas del SITVM, evitando su utilización para actividades que no estén justificadas por el servicio.
+
+En conclusión, el desarrollo del SITVM debe combinar el cumplimiento de las disposiciones sobre protección de datos personales y regulación del transporte con buenas prácticas de desarrollo y procesamiento de información. La conservación de los registros originales, la exactitud de los cálculos, la verificación de los resultados y el control del acceso contribuyen a que las soluciones algorítmicas sean confiables y permitan revisar las operaciones realizadas.
 
 ### 6.5 Sostenibilidad de la decisión
-_Pendiente para la entrega del 23 de noviembre._
+
+La sostenibilidad de las soluciones algorítmicas del SITVM depende de que puedan responder al crecimiento de la demanda sin requerir un aumento desproporcionado de los recursos computacionales. Esto es especialmente importante porque el procesamiento se realiza en un único servidor de aproximadamente 500 W, sin procesamiento paralelo ni distribuido, y dispone de una ventana nocturna limitada para completar sus operaciones.
+
+El caso plantea un escenario en el que la incorporación de una tercera línea de cable incrementa en un 30 % el volumen de validaciones diarias. Partiendo de las 1.400.000 validaciones habituales, el sistema pasaría a procesar aproximadamente 1.820.000 registros diarios, es decir, 420.000 validaciones adicionales. Este crecimiento exige que las estrategias seleccionadas mantengan un comportamiento eficiente a medida que aumenta el tamaño de los datos.
+
+**Comportamiento de las estrategias recomendadas**
+
+Para la detección de franjas de congestión se recomienda el algoritmo de Kadane, cuya complejidad temporal es Θ(n) y cuyo espacio adicional es Θ(1). Esto significa que el tiempo de procesamiento aumenta proporcionalmente al número de intervalos analizados, sin necesidad de almacenar estructuras adicionales que crezcan con el tamaño de la secuencia. Por ejemplo, si una secuencia aumenta un 30 % en su cantidad de intervalos, el trabajo algorítmico también aumenta aproximadamente un 30 %. Esta característica facilita el procesamiento de históricos más grandes y resulta más conveniente que la estrategia de dividir y vencer, cuya complejidad temporal es Θ(n log n).
+
+Para la liquidación del tope tarifario se recomienda la programación dinámica, cuya complejidad temporal es Θ(d) y espacial Θ(d), donde d representa el número de días del periodo. La estrategia calcula el costo mínimo recorriendo los días una sola vez y almacena los resultados necesarios para reconstruir las compras. Como la liquidación se realiza por tarjeta y los meses tienen una duración limitada de entre 28 y 31 días, el crecimiento de las validaciones diarias no incrementa directamente el tamaño de esta tabla. Sin embargo, si el aumento de la demanda también produce un mayor número de tarjetas activas, el tiempo total de liquidación crecerá proporcionalmente a la cantidad de tarjetas procesadas.
+
+En ambos casos, las estrategias recomendadas mantienen un crecimiento controlado y evitan la repetición innecesaria de cálculos. Esto permite aprovechar mejor la capacidad del servidor y reduce el riesgo de que las operaciones superen la ventana nocturna disponible.
+
+**Impacto sobre los recursos computacionales y energéticos**
+
+La elección de algoritmos con menor complejidad también contribuye a la sostenibilidad energética del procesamiento. Una ejecución que necesita menos operaciones y termina en menor tiempo reduce el tiempo durante el cual el servidor debe realizar trabajo computacional. Por lo tanto, se espera un menor consumo de energía frente a estrategias menos eficientes que realizan cálculos repetidos.
+
+En particular, Kadane reduce el trabajo necesario para encontrar el tramo de mayor congestión frente a la fuerza bruta y a dividir y vencer. De manera similar, la programación dinámica evita la exploración exponencial de combinaciones que realiza la solución exhaustiva para la liquidación tarifaria. Estas decisiones permiten mantener resultados exactos utilizando una cantidad de recursos más adecuada para el volumen de información del sistema.
+
+No obstante, el aumento del 30 % en las validaciones no implica necesariamente un incremento equivalente en el consumo energético total. El consumo también depende del número de tarjetas que se deben liquidar, de la cantidad de intervalos históricos analizados, de los tiempos reales de ejecución y del comportamiento del hardware. Por esta razón, la comparación energética debe apoyarse en las mediciones realizadas y no únicamente en las complejidades teóricas.
+
+**Proyección y mantenimiento de las soluciones**
+
+Para mantener la viabilidad del sistema a futuro, es importante realizar mediciones periódicas con volúmenes de datos crecientes y revisar que las operaciones continúen terminando dentro de la ventana de cuatro horas. También se deben conservar las pruebas de exactitud para garantizar que el aumento de los registros no afecte la calidad de los resultados.
+
+Si el volumen de información continúa creciendo, será necesario evaluar nuevamente los tiempos de ejecución y el consumo energético del servidor. En caso de que las operaciones se acerquen al límite de tiempo disponible, se podrán analizar nuevas mejoras en el procesamiento y en la infraestructura, sin sacrificar la exactitud de los resultados.
+
+En conclusión, la selección de Kadane para la detección de congestión y de programación dinámica para la liquidación tarifaria constituye una decisión sostenible desde el punto de vista algorítmico, porque permite procesar mayores volúmenes de información con un crecimiento controlado del trabajo computacional. Aunque el escenario de crecimiento del 30 % exige más recursos que la situación actual, las estrategias recomendadas ofrecen mejores condiciones para mantener la eficiencia del SITVM y responder a futuras ampliaciones del servicio.
 
 ---
 
