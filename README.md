@@ -120,7 +120,7 @@ Para desarrollar la solución del caso de liquidación del tope tarifario, el eq
 
 - **Interpretación de la regla simplificada actual:** se interpreta que los primeros treinta días del mes se dividen en bloques fijos: días 1 al 7, 8 al 14, 15 al 21, 22 al 28 y 29 al 30. Primero, para cada día se calcula el menor costo entre pagar los viajes con pasajes sencillos y utilizar el pase diario. Después, se suman los costos diarios de cada bloque y se limita ese valor al precio del pase semanal ($36.000). Finalmente, al acumulado de los primeros treinta días se le aplica el límite del pase mensual ($135.000). Por ejemplo, si durante los primeros siete días se realizan tres viajes diarios, el costo de los pasajes sería de $81.900. Al aplicar el pase diario, el costo de cada día queda en $9.500, para un acumulado de $66.500. Como este valor supera los $36.000 del pase semanal, la regla cobra $36.000 por ese bloque.
 
-- **Meses de 31 días:** el pase mensual tiene una cobertura de treinta días, por lo que no se extiende automáticamente al día 31. En la interpretación de la regla actual, los primeros treinta días se procesan con los límites semanal y mensual, mientras que el día 31 se cobra por separado, aplicando el menor costo entre los pasajes sencillos y el pase diario.
+- **Duración de los meses:** se considera que el periodo de liquidación corresponde a un mes calendario, que puede tener entre 28 y 31 días. La cantidad de días procesados depende del periodo recibido como entrada. Para la interpretación de la regla actual, los primeros treinta días se procesan con los límites semanal y mensual, mientras que, en los meses de 31 días, el día 31 se cobra por separado, aplicando el menor costo entre los pasajes sencillos y el pase diario.
 
 - **Pases que exceden el mes:** cuando un pase semanal o mensual comprado en los últimos días del mes tiene una cobertura que supera el periodo analizado, se considera únicamente la cobertura correspondiente a los días restantes del mes. Sin embargo, se mantiene el precio completo del pase, ya que no se supone un descuento proporcional por los días que quedan fuera del periodo.
 
@@ -727,19 +727,19 @@ La instancia representa ocho días de actividad de una tarjeta, donde cada posic
 
 **Resultado de la regla actual:**
 
-- Días 1 al 7: el costo de los viajes, aplicando el menor valor entre pasajes sencillos y pase diario, es de 38.500 pesos. Al superar el tope semanal, se cobran 36.000 pesos.
-- Día 8: se realizan tres viajes, cuyo costo más económico es el pase diario de 9.500 pesos.
-- Total cobrado: **45.500 pesos**.
+- Días 1 al 7: el costo de los viajes, aplicando el menor valor entre pasajes sencillos y pase diario, es de $38.500. Al superar el tope semanal, se cobran $36.000.
+- Día 8: se realizan tres viajes, cuyo costo más económico es el pase diario de $9.500.
+- Total cobrado: **$45.500**.
 
 **Resultado de la estrategia óptima:**
 
 La programación dinámica encuentra una combinación más económica:
 
-- Día 1: un pasaje sencillo de 3.900 pesos.
+- Día 1: un pasaje sencillo de $3.900.
 - Días 2 y 3: no se realizan viajes.
-- Día 4: un pase semanal de 36.000 pesos, que cubre hasta el día 10.
+- Día 4: un pase semanal de $36.000, que cubre hasta el día 10.
 
-El costo mínimo es de **39.900 pesos**.
+El costo mínimo es de **$39.900**.
 
 **Comparación de resultados:**
 
@@ -769,16 +769,16 @@ Recomendamos que el SITVM liquide el tope tarifario con la programación dinámi
 
 **Qué gana frente a hoy:**
 
-- **Cumple la política del tope sin excepciones.** La DP siempre encuentra la combinación más barata, así que la devolución es exactamente la diferencia frente al mínimo, sin un peso de más ni de menos. La regla actual puede cobrar de más cuando los viajes de una persona no coinciden con los bloques fijos: 5.600 pesos en el contraejemplo de ocho días.
-- **Elimina la causa de las quejas sin costo adicional de tiempo.** Ya no hace falta tratar distinto a las tarjetas que más viajan, que hoy reciben la regla simplificada porque la exhaustiva no termina. Liquidar 950.000 tarjetas con la DP toma cerca de 6,7 s, menos del 0,1 % de la ventana de 4 h. La exhaustiva tardaría unos 8 años por cierre.
-- **El costo energético es despreciable.** La DP consume unos 0,007 kWh más al año que la regla actual (6.1). A cambio, todos los usuarios reciben lo que les corresponde.
+- **Cumple la política del tope sin excepciones.** La DP siempre encuentra la combinación más barata, así que la devolución es exactamente la diferencia frente al mínimo, sin un peso de más ni de menos. La regla actual puede cobrar de más cuando los viajes de una persona no coinciden con los bloques fijos: $5.600 en el contraejemplo de ocho días.
+- **Elimina los cobros de más con un incremento despreciable de tiempo.** La programación dinámica encuentra la combinación más económica y permite calcular la devolución exacta. Aunque tarda aproximadamente 6,7 segundos por cada 950.000 tarjetas, frente a los 2,5 segundos de la regla actual, este incremento es insignificante frente a la ventana de cuatro horas disponible.
+- **El costo energético adicional es despreciable.** La DP consume aproximadamente 0,007 kWh más al año que la regla actual (6.1). Es una diferencia mínima frente al beneficio de garantizar una liquidación exacta para todos los usuarios.
 - **Deja trazabilidad.** Además del valor, la DP puede entregar la lista de compras que justifica cada liquidación. Sirve para responder una reclamación con el detalle de qué pases se consideraron.
 
 **Riesgos y límites que debe conocer:**
 
 - **Cambios de tarifa o de productos.** El tiempo crece de forma lineal con los días y con el número de productos, así que un pase nuevo (por ejemplo, uno quincenal) no compromete la ventana. Lo que sí cambia es el modelo: hay que agregar el producto a la recurrencia y volver a correr las pruebas contra la exhaustiva antes de usarlo en producción.
 - **Pases que cruzan el cierre de mes.** La solución supone que cada mes se liquida por separado (1.5). Si el SITVM reconoce un semanal comprado el día 28 que sigue vigente en el mes siguiente, la liquidación tendría que mirar los dos meses juntos. Esa regla de negocio debe confirmarse con Recaudo.
-- **Crecimiento del volumen.** El tiempo total crece en proporción al número de tarjetas. Aun si se multiplicaran por 100, la operación seguiría tomando del orden de minutos, muy lejos del límite de la ventana.
+- **Crecimiento del volumen.** El tiempo total crece en proporción al número de tarjetas. Si se multiplicara por 100 la cantidad de tarjetas, manteniendo condiciones de procesamiento similares, la ejecución de la programación dinámica tomaría aproximadamente 11 minutos. Esta cifra es una extrapolación de las mediciones realizadas, no una prueba ejecutada con ese volumen.
 - **Las cifras de tiempo vienen de nuestro computador.** El servidor del SITVM puede ser más rápido o más lento. Antes del primer cierre conviene medir en el servidor real; el margen es tan amplio que la conclusión no debería cambiar. También conviene ejecutar la DP sobre los registros de algunos meses reales para cuantificar el monto total que se debe devolver.
 
 ### 5.2 Comparación general y solución recomendada
