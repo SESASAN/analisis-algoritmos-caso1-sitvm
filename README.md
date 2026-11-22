@@ -525,7 +525,7 @@ Para el desarrollo del proyecto se utilizaron las siguientes herramientas y bibl
 
 | Herramienta | Uso en el proyecto |
 |---|---|
-| Python 3.14.0 | Lenguaje utilizado para implementar las estrategias, desarrollar las pruebas y realizar las mediciones. |
+| Python 3.13 o superior | Lenguaje utilizado para implementar las estrategias, desarrollar las pruebas y realizar las mediciones. |
 | `random` (biblioteca estándar) | Generación de instancias sintéticas en [`datos.py`](src/tope_tarifario/datos.py). Se utiliza un generador `random.Random` con una semilla fija para garantizar que los datos sean reproducibles. |
 | `time` (biblioteca estándar) | Medición de los tiempos de ejecución mediante `time.perf_counter()`, implementada en [`medicion.py`](src/tope_tarifario/medicion.py). |
 | `matplotlib` | Generación de las gráficas de tiempo y número de operaciones frente al tamaño de la entrada. Es la única dependencia externa del proyecto. |
@@ -1147,11 +1147,17 @@ pip install -r requirements.txt
 # 3. Pruebas de la operación 4 (terminan con "Todas las pruebas pasaron")
 python src/tope_tarifario/pruebas.py
 
-# 4. Mediciones y gráficas (menos de 30 s; se guardan en graficas/tope_tarifario/)
+# 4. Mediciones y gráficas de la operación 4 (menos de 30 s; se guardan en graficas/tope_tarifario/)
 python src/tope_tarifario/medicion.py
+
+# 5. Pruebas de la operación 3 (terminan con "Todas las pruebas pasaron")
+python src/congestion/pruebas.py
+
+# 6. Mediciones y gráficas de la operación 3 (cerca de 1 min; se guardan en graficas/congestion/)
+python src/congestion/medicion.py
 ```
 
-`medicion.py` imprime en la terminal los factores al duplicar `d`, la extrapolación a 950.000 tarjetas y la energía estimada, y vuelve a generar `tiempo_vs_n.png` y `operaciones_vs_n.png`. Como la semilla es fija, las instancias y el número de operaciones son siempre los mismos; los tiempos cambian un poco según el computador.
+Cada `medicion.py` imprime en la terminal los factores al duplicar el tamaño, la extrapolación al volumen real (950.000 tarjetas en la operación 4 y 80 estaciones de 166.000 intervalos en la operación 3) y la energía estimada, y vuelve a generar `tiempo_vs_n.png` y `operaciones_vs_n.png` en su carpeta. Como la semilla es fija, las instancias y el número de operaciones son siempre los mismos; los tiempos cambian un poco según el computador.
 
 ### Estructura del repositorio
 
@@ -1160,15 +1166,25 @@ python src/tope_tarifario/medicion.py
 ├── README.md
 ├── requirements.txt
 ├── src/
-│   └── tope_tarifario/
-│       ├── estrategia.py
-│       ├── exhaustivo.py
-│       ├── regla_actual.py
+│   ├── tope_tarifario/
+│   │   ├── estrategia.py
+│   │   ├── exhaustivo.py
+│   │   ├── regla_actual.py
+│   │   ├── datos.py
+│   │   ├── pruebas.py
+│   │   └── medicion.py
+│   └── congestion/
+│       ├── fuerza_bruta.py
+│       ├── dividir_y_vencer.py
+│       ├── kadane.py
 │       ├── datos.py
 │       ├── pruebas.py
 │       └── medicion.py
 └── graficas/
-    └── tope_tarifario/
+    ├── tope_tarifario/
+    │   ├── tiempo_vs_n.png
+    │   └── operaciones_vs_n.png
+    └── congestion/
         ├── tiempo_vs_n.png
         └── operaciones_vs_n.png
 ```
