@@ -74,27 +74,3 @@ def tramo_maximo_fuerza_bruta(saldos: list[int]) -> Tramo:
     """
     tramo, _ = tramo_maximo_fuerza_bruta_contando(saldos)
     return tramo
-
-
-if __name__ == "__main__":
-    casos = [
-        [2, -1, 4],
-        [-2, 3, -1, 5, -6],
-        [-4, -2, -7, -1, -9],
-        [1, -1, 1],
-        [5, 2, -1, 3],
-    ]
-
-    for saldos in casos:
-        tramo, operaciones = tramo_maximo_fuerza_bruta_contando(
-            saldos
-        )
-        print("Entrada:", saldos)
-        print("Resultado:", tramo)
-        print("Operaciones:", operaciones)
-        print("------------------------")
-
-    try:
-        tramo_maximo_fuerza_bruta([])
-    except ValueError as error:
-        print("Error esperado:", error)
