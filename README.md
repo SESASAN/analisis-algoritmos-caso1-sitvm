@@ -109,10 +109,43 @@ La operación devuelve una tupla con la estructura `(inicio, fin, suma)`.
 | Potencia del servidor | Vatios | ≈ 500 W |
 
 ### 1.3 Operaciones críticas del proceso
-_Pendiente para la entrega del 23 de noviembre._
+
+El tiempo que tarda cada operación depende de la estrategia utilizada y de la cantidad de datos que necesita procesar. Para este análisis se tienen en cuenta los datos del caso: 1.400.000 validaciones diarias, 950.000 tarjetas al mes y 80 estaciones con 166.000 intervalos de histórico cada una.
+
+| Operación | Estrategia actual | Complejidad | Frecuencia | Trabajo aproximado por ejecución | ¿Dentro de la ventana? |
+|---|---|---|---|---|---|
+| 1 · Deduplicación | Compara cada validación con todas las ya aceptadas | Θ(n²) | Todas las noches | n²/2 ≈ 9,8 × 10¹¹ comparaciones | Debe caber en 4 h |
+| 2 · Ordenamiento | Inserción | Θ(n²) en el caso promedio | Todas las noches | n²/4 ≈ 4,9 × 10¹¹ movimientos | Debe caber en 4 h |
+| 3 · Franjas de congestión | Evalúa todos los tramos | Θ(n²) por estación | Cuando Planeación lo requiere | ≈ 1,1 × 10¹² sumas para las 80 estaciones | Hoy no termina; se usa una muestra |
+| 4 · Tope tarifario | Exhaustiva más regla simplificada | Exponencial en los días con viaje | Cierre de mes | Más de 2^31 llamadas para una tarjeta que viaja todo el mes | Solo cabe gracias a la regla, que cobra de más |
+
+Las operaciones que más trabajo requieren son las tres que tienen un crecimiento cuadrático. De estas, las operaciones 1 y 2 son las más importantes para la ventana nocturna, ya que se ejecutan todas las noches con el volumen completo de datos del día y cada una realiza alrededor de 10¹¹ a 10¹² pasos.
+
+La operación 3 tiene un crecimiento similar, pero trabaja con el histórico de las estaciones. Por esta razón, actualmente no se puede ejecutar sobre toda la red y Planeación tiene que trabajar con una muestra.
+
+Por otro lado, la operación 4 tiene un crecimiento exponencial, que es el más alto de las cuatro operaciones. Sin embargo, el proceso actual evita ejecutar la solución exhaustiva utilizando una regla simplificada. El problema es que esta regla puede terminar cobrando más de lo que corresponde.
+
+Este proyecto se enfoca en mejorar las operaciones 3 y 4. La operación 4 necesita una solución que permita calcular correctamente el tope tarifario y evitar cobros de más. La operación 3 necesita una estrategia que permita analizar todas las estaciones sin que el tiempo de ejecución sea un problema.
+
+Las operaciones 1 y 2 quedan como recomendaciones para una siguiente fase del proyecto (5.2).
 
 ### 1.4 Costo energético del proceso actual (línea base)
-_Pendiente para la entrega del 23 de noviembre._
+
+Para calcular el consumo de energía se utiliza la fórmula **kWh = kW × h**, tomando como referencia el servidor de 0,5 kW indicado en el caso.
+
+Como punto de partida, se tiene en cuenta el tiempo que el cliente reporta para el proceso nocturno y, para las operaciones 3 y 4, los tiempos obtenidos durante las pruebas realizadas en los apartados 4.1 y 4.2.
+
+| Componente | Tiempo | Energía por ejecución | Frecuencia | Energía por año |
+|---|---:|---:|---|---:|
+| Proceso nocturno actual (reportado por el cliente) | Más de 8 h | Más de 4 kWh | 365 noches | Más de 1.460 kWh |
+| Operación 3, fuerza bruta sobre las 80 estaciones (estimada) | ≈ 15,2 h | ≈ 7,6 kWh | Una vez por noche, si se analizara toda la red | ≈ 2.776 kWh |
+| Operación 4, regla simplificada (medida) | ≈ 2,5 s | ≈ 0,0003 kWh | 12 cierres | ≈ 0,004 kWh |
+
+- **Proceso nocturno:** según la información del cliente, este proceso tarda más de 8 horas. Por lo tanto, consume más de 4 kWh por noche y más de 1.460 kWh al año. Esta cifra es un mínimo, ya que no se conoce el tiempo exacto que tarda, solo que supera las 8 horas.
+- **Operación 3:** actualmente no se ejecuta sobre todas las estaciones porque el tiempo que requiere no resulta práctico. Si se utilizara la fuerza bruta para analizar toda la red, el consumo sería de aproximadamente 7,6 kWh por ejecución. Si se hiciera una vez cada noche, llegaría a unos 2.776 kWh al año, casi el doble del consumo de todo el proceso nocturno actual.
+- **Operación 4:** actualmente se utiliza una regla simplificada para las tarjetas que realizan más viajes. Su consumo de energía es muy bajo. La solución exhaustiva completa no se toma como parte del consumo actual, ya que tardaría demasiado en ejecutarse: se estima que necesitaría casi 8 años por cada cierre (apartado 4.1).
+
+Es importante aclarar que todos estos valores son estimaciones. Los resultados de las operaciones 3 y 4 se obtuvieron a partir de pruebas realizadas en un computador de escritorio, no en el servidor del SITVM. Además, los cálculos no incluyen el tiempo de lectura de los datos ni el consumo del servidor mientras permanece en reposo.
 
 ### 1.5 Supuestos del equipo
 
@@ -548,29 +581,23 @@ En cada instancia también se comprueba que las compras reconstruidas cubran tod
 
 #### Diseño de los experimentos
 
-Los experimentos se realizan mediante [`medicion.py`](src/tope_tarifario/medicion.py), mientras que las instancias se generan con la función `generar_instancias` de [`datos.py`](src/tope_tarifario/datos.py), utilizando la semilla fija `2026`. Para cada tamaño de entrada, las tarjetas se generan una sola vez y las tres soluciones se ejecutan sobre las mismas instancias, lo que permite realizar una comparación bajo condiciones equivalentes.
+Los experimentos se encuentran en [`medicion.py`](src/tope_tarifario/medicion.py), mientras que los datos se generan mediante la función `generar_instancias`, ubicada en [`datos.py`](src/tope_tarifario/datos.py). Para todos los experimentos se utilizó la misma semilla (2026), con el fin de mantener las condiciones de las pruebas.
 
-Cada día tiene una probabilidad de 0,9 de registrar viajes. Cuando hay viajes, se generan entre 1 y 4. De esta manera, la cantidad de días con viajes aumenta a medida que crece `d`, lo que permite analizar el comportamiento de las estrategias frente a entradas de mayor tamaño.
+Para cada tamaño, las tarjetas se generan una sola vez y las tres soluciones se prueban utilizando exactamente los mismos datos. Cada día tiene una probabilidad de 0,9 de incluir viajes (entre 1 y 4), por lo que la cantidad de días con viajes aumenta a medida que crece `d`.
 
-Se utilizan tres series de experimentos:
-
-| Serie | Tamaños `d` (días) | Tarjetas por tamaño | Soluciones medidas | Propósito |
+| Serie | Tamaños `d` (días) | Tarjetas por tamaño | Soluciones | Propósito |
 |---|---|---:|---|---|
-| 1 · Periodos cortos | 6, 8, 10, 12, 14, 16, 18 y 20 | 5 | DP, exhaustiva y regla actual | Comparar la programación dinámica con la solución exhaustiva en tamaños donde esta última todavía puede ejecutarse. |
-| 2 · Periodos largos | 1.000, 2.000, 5.000, 10.000, 20.000, 50.000 y 100.000 | 3 | DP y regla actual | Analizar el crecimiento lineal de ambas estrategias con entradas de mayor tamaño. |
-| 3 · Volumen real | 30 | 2.000 | DP y regla actual | Medir el tiempo por tarjeta para un periodo de 30 días y utilizarlo como base de la extrapolación. |
+| 1 · Periodos cortos | 6, 8, 10, 12, 14, 16, 18 y 20 | 5 | DP, exhaustiva y regla actual | Comparar las tres soluciones mientras la exhaustiva todavía puede ejecutarse |
+| 2 · Periodos largos | 1.000 a 100.000 | 3 | DP y regla actual | Observar cómo crece el tiempo de ejecución con tamaños mayores |
+| 3 · Volumen real | 30 | 2.000 | DP y regla actual | Utilizar los resultados para hacer una estimación con el volumen real |
 
-Los tamaños menores y mayores a 31 días se utilizan como instancias sintéticas para estudiar el crecimiento de los algoritmos. No representan la duración de un mes real, que en el caso planteado está entre 28 y 31 días.
+Los tamaños que no corresponden a periodos de 28 a 31 días son datos sintéticos. Se utilizan para observar cómo se comportan los algoritmos cuando aumenta la cantidad de días, no para representar meses reales.
 
-Las condiciones de medición son las siguientes:
-
-- **Parejas `d` y `2d`:** la serie 1 incluye las parejas 6→12, 8→16 y 10→20. La serie 2 incluye 1.000→2.000, 5.000→10.000, 10.000→20.000 y 50.000→100.000.
-- **Repeticiones:** cada medición se repite 5 veces y se reporta el tiempo medio por tarjeta, con el propósito de reducir el efecto de las variaciones del sistema operativo.
-- **Cronómetro:** `time.perf_counter()` mide únicamente el tiempo de ejecución de cada solución. La generación de los datos queda por fuera de la medición.
-- **Verificación dentro del experimento:** antes de medir cada tamaño de la serie 1, se comprueba mediante `assert` que la programación dinámica y la solución exhaustiva obtengan el mismo costo para todas las tarjetas.
-- **Operaciones elementales:** cada estrategia utiliza un contador propio. En la programación dinámica se cuentan las opciones evaluadas (`costo_minimo_contando`); en la solución exhaustiva, las llamadas recursivas (`costo_exhaustivo_contando`); y en la regla actual, los días procesados (`costo_regla_actual_contando`).
-- **Límite de la solución exhaustiva:** las mediciones de esta estrategia se detienen en `d = 20`, donde alcanza un tiempo cercano a 0,29 segundos por tarjeta. Su crecimiento impide continuar con tamaños mayores en condiciones razonables de medición.
-- **Equipo de medición:** procesador AMD Ryzen 5 7600X (6 núcleos, 12 hilos) y 32 GB de memoria RAM DDR5 a 4800 MHz, con Python 3.14.0. Las mediciones se ejecutaron en un solo hilo. El experimento completo tarda menos de 30 segundos.
+- **Comparación entre `d` y `2d`:** se utilizaron las parejas 6→12, 8→16 y 10→20 en la primera serie. En la segunda, se compararon 1.000→2.000, 5.000→10.000, 10.000→20.000 y 50.000→100.000.
+- **Medición:** cada tamaño se ejecutó 5 veces y se calculó el tiempo promedio por tarjeta. Para medirlo se utilizó `time.perf_counter()`, teniendo en cuenta únicamente el tiempo que tarda cada solución en ejecutarse.
+- **Verificación y conteo:** antes de medir cada tamaño de la primera serie, se utiliza un `assert` para comprobar que la DP y la solución exhaustiva obtengan el mismo costo. Además, cada solución tiene su propio contador (`_contando`): la DP cuenta las opciones evaluadas, la exhaustiva cuenta las llamadas recursivas y la regla actual cuenta los días procesados.
+- **Límite de la exhaustiva:** esta solución se probó únicamente hasta `d = 20`, ya que para ese tamaño tarda aproximadamente 0,29 segundos por tarjeta.
+- **Equipo utilizado:** AMD Ryzen 5 7600X (6 núcleos y 12 hilos), 32 GB de RAM DDR5 a 4800 MHz y Python 3.13.7. Las pruebas se ejecutaron en un solo hilo y todo el experimento tardó menos de 30 segundos.
 
 #### Resultados
 
@@ -597,8 +624,6 @@ A continuación, se presentan algunas mediciones representativas de los experime
 
 #### Lo medido contra lo esperado
 
-Para comparar el comportamiento experimental con el análisis teórico, se utilizan parejas de tamaños `d` y `2d`. Se calcula cuánto aumentan el tiempo de ejecución y el número de operaciones al duplicar el tamaño de la entrada.
-
 | Pareja | Solución | Factor de tiempo | Factor de operaciones | Factor esperado |
 |---|---|---:|---:|---:|
 | 10 → 20 | Exhaustiva | ×905 | ×989 | ≈ 2^10 = 1.024 |
@@ -608,15 +633,10 @@ Para comparar el comportamiento experimental con el análisis teórico, se utili
 | 10.000 → 20.000 | Regla actual | ×1,97 | ×2,00 | 2 |
 | 50.000 → 100.000 | DP | ×2,07 | ×2,00 | 2 |
 
-A partir de estos resultados, se identifican los siguientes comportamientos:
-
-- **Programación dinámica y regla actual:** al duplicar `d`, el número de operaciones se duplica. En la serie de periodos largos, el tiempo de ejecución aumenta aproximadamente entre 1,9 y 2,1 veces. Estos resultados coinciden con el crecimiento lineal esperado, Θ(d). En la programación dinámica se realizan aproximadamente 2,8 operaciones por día, debido a que el 90 % de los días tienen viajes y requieren evaluar tres opciones, mientras que los días sin viajes requieren una sola operación. Esto se mantiene dentro del rango `d ≤ T(d) ≤ 3d` establecido en el análisis de complejidad.
-
-- **Solución exhaustiva:** al pasar de 10 a 20 días, el número de operaciones aumenta aproximadamente 989 veces, un valor cercano a `2^10 = 1.024`. El tiempo de ejecución aumenta aproximadamente 905 veces. Esto evidencia un crecimiento exponencial, coherente con la cota inferior Ω(2^d) obtenida para el caso en el que todos los días tienen viajes. El factor observado puede ser menor debido a que aproximadamente el 10 % de los días no registran viajes y no generan nuevas ramas de decisión. Cabe aclarar que esta medición es una evidencia empírica y no una demostración: muestra que, en estas instancias, cada día adicional casi duplica el trabajo, pero no prueba una cota superior. La recurrencia solo garantiza que el trabajo está entre Ω(2^d) y O(4^d), porque cada día con viajes abre como máximo cuatro caminos.
-
-- **Diferencias en las mediciones:** en la serie de periodos cortos, los tiempos de la programación dinámica y de la regla actual son de pocos microsegundos. En estos tamaños, el costo fijo de llamar las funciones y crear las listas tiene una influencia importante sobre el tiempo total. Por esta razón, los factores de crecimiento presentan algunas variaciones. Por ejemplo, entre 6 y 12 días, la programación dinámica aumenta aproximadamente ×1,09, mientras que entre 10 y 20 días la regla actual aumenta ×1,51. Incluso se observa que la programación dinámica tarda más con 6 días que con 8. En la serie de periodos largos, este efecto pierde importancia y los factores se acercan a 2. El contador de operaciones no presenta estas variaciones, ya que no depende del tiempo de ejecución del computador.
-
-- **Programación dinámica frente a regla actual:** ambas estrategias presentan crecimiento lineal, pero la programación dinámica tiene un mayor costo constante por día. Para `d = 100.000`, tarda 28,589 ms, frente a 7,146 ms de la regla actual. Esto representa una diferencia aproximada de cuatro veces, debido a que la programación dinámica evalúa varias opciones y almacena resultados en dos tablas por día. Sin embargo, ambas estrategias mantienen el mismo orden de complejidad temporal.
+- **DP y regla actual:** cuando se duplica `d`, la cantidad de operaciones también se duplica. En la segunda serie, el tiempo de ejecución aumenta entre 1,9 y 2,1 veces, lo que coincide con un crecimiento de Θ(d). La DP realiza aproximadamente 2,8 operaciones por día: el 90 % de los días tiene viajes y en ellos evalúa 3 opciones, mientras que en los días sin viajes realiza 1. Esto se mantiene dentro del rango `d ≤ T(d) ≤ 3d`.
+- **Solución exhaustiva:** al pasar de 10 a 20 días, las operaciones aumentan 989 veces y el tiempo de ejecución 905 veces. Este resultado se acerca bastante a las 1.024 veces que se esperan con un crecimiento de `2^10`. Esto ocurre porque cada día adicional casi duplica el trabajo. El resultado queda un poco por debajo debido a que cerca del 10 % de los días no tienen viajes. Hay que tener en cuenta que esto es una observación de los experimentos y no una demostración matemática, ya que la recurrencia solo permite establecer que el trabajo está entre Ω(2^d) y O(4^d).
+- **Variaciones en los tamaños pequeños:** en la primera serie, la DP y la regla tardan muy pocos microsegundos. Por eso, el tiempo fijo que toma llamar a las funciones tiene bastante peso y puede generar diferencias en los resultados, como el factor ×1,09 de la DP al pasar de 6 a 12 días. En la segunda serie, los resultados se acercan más a 2 y el contador de operaciones no presenta este problema.
+- **DP frente a regla actual:** las dos soluciones tienen crecimiento lineal, pero la DP tarda aproximadamente 4 veces más por día. Por ejemplo, con `d = 100.000`, tarda 28,6 ms frente a los 7,1 ms de la regla actual. Esto se debe a que la DP evalúa tres opciones y trabaja con dos tablas. Es una diferencia en el tiempo de ejecución, pero no en la complejidad de ambas soluciones.
 
 #### Extrapolación al volumen real
 
@@ -720,6 +740,88 @@ python src/congestion/pruebas.py
 **Resultado.** Todas las pruebas pasan y el script termina con `Todas las pruebas pasaron`.
 
 **Limitación.** Las series aleatorias llegan a 40 intervalos porque el juez es cúbico. Los errores que solo aparecieran en series largas se cubren con la medición, más adelante en esta sección, que verifica que las estrategias coincidan en los tamaños donde la fuerza bruta alcanza a ejecutarse. Además, los saldos sintéticos son uniformes y no reproducen los patrones reales de las horas pico; eso no afecta la exactitud, pero sí el tramo que se encuentra en cada serie.
+
+#### Diseño de los experimentos
+
+Los experimentos se encuentran en [`medicion.py`](src/congestion/medicion.py), y los datos se generan con la función `generar_series`, ubicada en [`datos.py`](src/congestion/datos.py). Para las pruebas se utilizaron saldos enteros entre −60 y 60 y se mantuvo fija la semilla 2026.
+
+En cada tamaño, las series se generan una sola vez y todas las estrategias trabajan con los mismos datos. De esta manera, se pueden comparar sus resultados bajo las mismas condiciones.
+
+| Serie | Tamaños `n` (intervalos) | Series por tamaño | Estrategias | Propósito |
+|---|---|---:|---|---|
+| 1 · Series cortas | 250, 500, 1.000, 2.000, 4.000 y 8.000 | 3 | Fuerza bruta, dividir y vencer y Kadane | Comparar las tres estrategias mientras la fuerza bruta todavía puede ejecutarse |
+| 2 · Series largas | 10.000, 20.000, 41.500, 83.000, 166.000 y 332.000 | 3 | Dividir y vencer y Kadane | Llegar al histórico de dos años (166.000) y probar también el doble de ese tamaño |
+
+- **Comparación entre `n` y `2n`:** en la primera serie se compararon todos los tamaños consecutivos, desde 250→500 hasta 4.000→8.000. En la segunda se utilizaron las parejas 10.000→20.000, 41.500→83.000, 83.000→166.000 y 166.000→332.000.
+- **Medición:** cada tamaño se ejecutó 3 veces y se calculó el tiempo promedio por serie. Se utilizó `time.perf_counter()` para medir únicamente el tiempo de ejecución de cada estrategia.
+- **Verificación durante los experimentos:** antes de realizar las mediciones de cada tamaño, se utiliza un `assert` para comprobar que todas las estrategias obtengan la misma suma en todas las series. Esto también se verificó para los tamaños de 166.000 y 332.000 intervalos, en las estrategias de dividir y vencer y Kadane.
+- **Conteo de operaciones:** se contó cada intervalo sumado, utilizando las versiones `_contando` de cada estrategia.
+- **Límite de la fuerza bruta:** esta estrategia se probó hasta `n = 8.000`, donde ya tarda aproximadamente 1,6 segundos por serie. Si se utilizara con 166.000 intervalos, tardaría más de 11 minutos por serie.
+- **Equipo utilizado:** se trabajó con el mismo equipo de la operación 4: AMD Ryzen 5 7600X, 32 GB de RAM y Python 3.13.7, utilizando un solo hilo. Todo el experimento tardó cerca de un minuto.
+
+#### Resultados
+
+![Tiempo frente al tamaño – franjas de congestión](graficas/congestion/tiempo_vs_n.png)
+
+![Operaciones frente al tamaño – franjas de congestión](graficas/congestion/operaciones_vs_n.png)
+
+En la gráfica de la izquierda se utiliza una escala logarítmica en los dos ejes. Esto permite observar mejor cómo crece cada estrategia: la fuerza bruta tiene una pendiente aproximadamente dos veces mayor que la de Kadane, lo que corresponde a un crecimiento de n² frente a n. Por su parte, dividir y vencer queda un poco por encima de Kadane.
+
+En la gráfica de la derecha se utiliza una escala lineal. Allí se puede ver que Kadane mantiene un crecimiento prácticamente lineal, mientras que dividir y vencer aumenta un poco más rápido debido al factor log n.
+
+| `n` | Kadane (ms) | Fuerza bruta (ms) | Dividir y vencer (ms) | Sumas Kadane | Sumas fuerza bruta | Sumas DyV |
+|---:|---:|---:|---:|---:|---:|---:|
+| 250 | 0,014 | 1,24 | 0,20 | 250 | 31.375 | 2.244 |
+| 1.000 | 0,055 | 22,3 | 0,95 | 1.000 | 500.500 | 10.976 |
+| 4.000 | 0,224 | 371,7 | 4,30 | 4.000 | 8.002.000 | 51.904 |
+| 8.000 | 0,466 | 1.590,0 | 9,09 | 8.000 | 32.004.000 | 111.808 |
+| 41.500 | 2,51 | — | 53,5 | 41.500 | — | 681.464 |
+| 166.000 | 9,62 | — | 216,1 | 166.000 | — | 3.057.856 |
+| 332.000 | 19,37 | — | 449,3 | 332.000 | — | 6.447.712 |
+
+Con 8.000 intervalos, Kadane es aproximadamente 3.400 veces más rápido que la fuerza bruta. Al trabajar con el histórico de dos años, Kadane puede procesar una estación en menos de 10 ms, mientras que dividir y vencer tarda alrededor de 0,22 segundos.
+
+#### Lo medido contra lo esperado
+
+En el caso de dividir y vencer, el factor esperado al duplicar `n` no es exactamente 2. Esto se debe a que cada vez que se duplica el tamaño también se agrega un nivel de recursión. Por eso, el factor esperado se calcula con la fórmula `2(log₂ 2n + 1) / (log₂ n + 1)`.
+
+| Pareja | Estrategia | Factor de tiempo | Factor de operaciones | Factor esperado |
+|---|---|---:|---:|---:|
+| 4.000 → 8.000 | Fuerza bruta | ×4,28 | ×4,00 | 4 |
+| 4.000 → 8.000 | Dividir y vencer | ×2,12 | ×2,15 | ≈ 2,15 |
+| 4.000 → 8.000 | Kadane | ×2,08 | ×2,00 | 2 |
+| 83.000 → 166.000 | Dividir y vencer | ×2,08 | ×2,11 | ≈ 2,12 |
+| 83.000 → 166.000 | Kadane | ×2,00 | ×2,00 | 2 |
+| 166.000 → 332.000 | Dividir y vencer | ×2,08 | ×2,11 | ≈ 2,11 |
+| 166.000 → 332.000 | Kadane | ×2,01 | ×2,00 | 2 |
+
+- **Fuerza bruta:** al duplicar `n`, la cantidad de sumas aumenta 4 veces en todas las parejas. El tiempo también aumenta entre 3,99 y 4,28 veces, lo que coincide con el crecimiento esperado de Θ(n²).
+- **Dividir y vencer:** la cantidad de sumas aumenta un poco más del doble, entre 2,11 y 2,22 veces. Esto coincide con lo que predice la fórmula y también se refleja en los tiempos de ejecución. Es el comportamiento esperado de Θ(n log n): su crecimiento es cercano al lineal, pero un poco más rápido.
+- **Kadane:** al duplicar `n`, las sumas también se duplican exactamente y el tiempo aumenta entre 1,91 y 2,08 veces. Esto coincide con el crecimiento lineal de Θ(n).
+- **Diferencias entre estrategias:** con 166.000 intervalos, dividir y vencer tarda unas 22 veces más que Kadane, aunque solo realiza unas 18 veces más sumas. Esta diferencia se debe principalmente a las llamadas recursivas, que tienen un costo adicional en Python y que no aparece en el contador de operaciones. A diferencia de lo que ocurre en la operación 4, los tiempos de las series pequeñas son bastante estables, porque incluso con 250 intervalos el trabajo realizado ya tiene más peso que el tiempo fijo de llamar a las funciones.
+
+#### Extrapolación al volumen real
+
+Planeación necesita trabajar con el histórico de dos años de las 80 estaciones. Como cada estación se procesa por separado, el tiempo total se calcula multiplicando el tiempo de una estación por 80.
+
+- **Kadane y dividir y vencer:** no es necesario hacer una estimación para `n`, porque ambas estrategias se probaron directamente con 166.000 intervalos, que corresponden al histórico de dos años.
+- **Fuerza bruta:** como no se pudo medir directamente con 166.000 intervalos, se utiliza el tiempo de la prueba más grande realizada (8.000 intervalos) y se calcula el crecimiento siguiendo el comportamiento cuadrático observado en las gráficas: `t(166.000) ≈ 1,59 s × (166.000 / 8.000)² ≈ 685 s` por estación. Si se hiciera una regla de tres lineal, el resultado sería unas 20 veces menor que el tiempo estimado.
+
+| Estrategia | Tiempo por estación (`n = 166.000`) | Tiempo para 80 estaciones | Energía por ejecución (0,5 kW) |
+|---|---:|---:|---:|
+| Kadane | 9,6 ms | ≈ 0,8 s | ≈ 0,0001 kWh |
+| Dividir y vencer | 0,22 s | ≈ 17 s | ≈ 0,0024 kWh |
+| Fuerza bruta (estimada) | ≈ 685 s (11,4 min) | ≈ 15,2 h | ≈ 7,6 kWh |
+
+Si se utilizara la fuerza bruta para analizar toda la red, el proceso tardaría más de 15 horas. Esto significa que no alcanzaría a terminar durante la noche y explica por qué actualmente Planeación trabaja con una muestra de estaciones.
+
+Con Kadane, en cambio, se pueden procesar las 80 estaciones en menos de un segundo, mientras que dividir y vencer tardaría aproximadamente 17 segundos. Con cualquiera de estas dos estrategias sería posible analizar toda la red cada noche.
+
+Incluso si el histórico aumentara un 30 %, la fuerza bruta tardaría unas 25,7 horas (un incremento de ×1,69), mientras que Kadane seguiría resolviendo el proceso en menos de un segundo.
+
+Hay que tener en cuenta que estos tiempos son estimaciones. Pueden variar dependiendo del equipo utilizado, ya que las pruebas se realizaron en un computador de escritorio y no en el servidor del SITVM. También se supone que los saldos sintéticos tienen una longitud similar a la del histórico real. Sin embargo, el comportamiento del crecimiento de los algoritmos no depende del equipo utilizado.
+
+---
 
 ## 5. Análisis comparativo
 
@@ -839,7 +941,23 @@ La energía se estima con **kWh = kW × h**, con el servidor de 0,5 kW que infor
 - **Supuestos:** son estimaciones. Se asume que el servidor consume sus 500 W solo durante el cálculo, y no se incluyen la lectura de datos, la escritura de las devoluciones ni el consumo del servidor en reposo, que es el mismo para todas las soluciones.
 
 #### Proceso completo
-_Pendiente para la entrega del 23 de noviembre._
+
+Para comparar el consumo de energía de las dos operaciones que se trabajaron en el proyecto, se utilizan como referencia los valores de la línea base del apartado 1.4. El cálculo se realiza con la fórmula kWh = kW × h, tomando como referencia el servidor de 0,5 kW.
+
+En el caso de la operación 3, se supone que se realiza una ejecución cada noche sobre todas las estaciones. Esto representa lo que Planeación necesita para dejar de trabajar únicamente con muestras y poder analizar toda la red.
+
+| Operación | Estrategia actual | Estrategia propuesta | Energía actual por año | Energía propuesta por año | Diferencia anual |
+|---|---|---|---:|---:|---:|
+| 3 · Franjas de congestión | Fuerza bruta (estimada) | Kadane | ≈ 2.776 kWh | ≈ 0,04 kWh | ≈ 2.776 kWh menos |
+| 4 · Tope tarifario | Regla simplificada | Programación dinámica | ≈ 0,004 kWh | ≈ 0,011 kWh | ≈ 0,007 kWh más |
+
+- **Operación 3:** con Kadane, el tiempo de ejecución pasa de unas 15 horas a menos de un segundo por ejecución. Si se analizara toda la red cada noche, el ahorro sería de aproximadamente 2.776 kWh al año. Dividir y vencer también permitiría reducir casi todo ese consumo, hasta unos 0,9 kWh al año, aunque Kadane es unas 22 veces más rápido.
+- **Operación 4:** la programación dinámica consume un poco más de energía que la regla simplificada, aproximadamente 0,007 kWh adicionales al año. Sin embargo, esta diferencia es prácticamente insignificante si se tiene en cuenta que permite eliminar los cobros de más y calcular correctamente el tope tarifario (apartado 5.1).
+- **Operaciones 1 y 2:** estas operaciones no se modificaron durante el proyecto, por lo que mantienen su consumo actual, que supera los 1.460 kWh al año. Como siguiente paso, se recomienda reemplazar la comparación de cada validación con todas las demás y el ordenamiento por inserción por estrategias más eficientes. Esto ayudaría a reducir buena parte del consumo del proceso nocturno.
+
+En general, las dos estrategias propuestas permiten que Planeación pueda analizar todas las estaciones y que el cálculo del tope tarifario sea correcto. Todo esto se consigue con un consumo de energía adicional prácticamente nulo.
+
+Por último, hay que recordar que estos valores son estimaciones y que pueden variar por las condiciones del equipo utilizado para las mediciones, tal como se explicó en el apartado 1.4.
 
 ### 6.2 Preguntas de impacto del caso (personas, normativa, crecimiento)
 
