@@ -291,7 +291,7 @@ función exh(viajes, t):
 
 La estrategia exhaustiva evalúa todas las combinaciones posibles de compra de productos tarifarios, sin almacenar los resultados de los subproblemas ya resueltos. Su complejidad espacial es Θ(d), la cual se encuentra determinada por la profundidad máxima de las llamadas recursivas. El análisis de su complejidad temporal se desarrolla en la sección 4.1.
 
-**Regla actual (línea base).** Sigue la interpretación descrita en §1.5.
+**Regla actual (línea base).** Sigue la interpretación descrita en 1.5.
 
 ```text
 función regla_actual(viajes):
