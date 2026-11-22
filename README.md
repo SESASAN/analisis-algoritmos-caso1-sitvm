@@ -901,45 +901,38 @@ A partir de los riesgos identificados, el diseño del sistema contempla los sigu
 
 En conclusión, la eficiencia de los algoritmos debe estar acompañada de exactitud, trazabilidad y cumplimiento de los tiempos establecidos. Estas condiciones permiten reducir el riesgo de cobros incorrectos, pérdida de información y decisiones operativas equivocadas, procurando que la optimización del SITVM también contribuya a proteger a las personas que dependen del servicio.
 
-### 6.4 Marco normativo y buenas prácticas
+### 6.4 Marco normativo
 
-El diseño de las soluciones algorítmicas del SITVM debe considerar las disposiciones relacionadas con la protección de los datos personales y la regulación del servicio público de transporte en Colombia. Estas normas son relevantes porque el sistema procesa información asociada a las tarjetas de los usuarios, registra sus desplazamientos y realiza cálculos que determinan los valores que deben pagar por el servicio.
+El desarrollo del SITVM debe considerar las disposiciones relacionadas con la protección de datos personales y la regulación del transporte público en Colombia. Estas normas permiten establecer criterios para el manejo de la información y para el contexto en el que se realizan las operaciones del sistema.
 
 **Ley 1581 de 2012 · Protección de datos personales**
 
-La Ley 1581 de 2012 establece disposiciones generales para la protección de datos personales y reconoce el derecho de las personas a conocer, actualizar y rectificar la información que se encuentre registrada sobre ellas en bases de datos. Su aplicación es importante para el SITVM porque los registros de validación contienen identificadores de tarjetas, estaciones y marcas de tiempo. Aunque estos campos no necesariamente muestran por sí solos el nombre de una persona, pueden relacionarse con un usuario y permitir identificar sus recorridos y hábitos de desplazamiento.
+Esta ley establece disposiciones generales para proteger los datos personales. Sus artículos 1 y 2 establecen el objeto y el ámbito de aplicación de la norma, mientras que el artículo 4 contempla principios para el tratamiento de datos personales, como la finalidad, la libertad, la veracidad o calidad de la información, el acceso y la circulación restringida, la seguridad y la confidencialidad (Congreso de Colombia, 2012, arts. 1, 2 y 4).
 
-El artículo 4 establece principios que deben respetarse durante el tratamiento de esta información:
+En el SITVM, los registros de validación pueden contener información relacionada con una tarjeta, el momento y el lugar de un viaje. Cuando estos datos permiten asociar la información con una persona natural, su tratamiento debe considerar los principios establecidos en esta ley. Por esta razón, es importante conservar la integridad de los registros, limitar el acceso a la información y utilizarla para las finalidades autorizadas.
 
-- **Finalidad:** los datos deben utilizarse para propósitos legítimos y previamente definidos. En el SITVM, la información de las validaciones debe utilizarse para las actividades propias del procesamiento, como la eliminación de duplicados, la liquidación tarifaria y el análisis de congestión.
-- **Veracidad o calidad:** la información debe ser completa, exacta, actualizada y comprobable. Esto se relaciona directamente con la necesidad de no eliminar validaciones legítimas ni modificar incorrectamente los registros recibidos.
-- **Acceso y circulación restringida:** la información personal debe estar disponible únicamente para las personas autorizadas, de acuerdo con las condiciones establecidas por la ley.
-- **Seguridad:** deben adoptarse medidas técnicas, humanas y administrativas para evitar la pérdida, adulteración, consulta o utilización no autorizada de los registros.
-- **Confidencialidad:** quienes intervengan en el tratamiento de los datos deben mantener la reserva de la información personal.
+**Ley 336 de 1996 · Estatuto Nacional de Transporte**
 
-En relación con estos principios, el proyecto establece que el archivo original de validaciones debe conservarse sin modificaciones, lo que permite mantener la integridad de los registros recibidos y facilitar su verificación. También se considera una buena práctica limitar el acceso a la información y evitar que los datos asociados a las tarjetas sean utilizados para propósitos diferentes a los establecidos para el sistema.
+Esta ley adopta el Estatuto Nacional de Transporte y establece los principios y criterios que sirven de fundamento para la regulación y reglamentación del transporte público en Colombia. Su artículo 1 incluye expresamente el transporte público masivo y terrestre; el artículo 2 establece la seguridad y la protección de los usuarios como prioridades del sector, y el artículo 3 contempla las condiciones de seguridad, comodidad y accesibilidad que deben verificar las autoridades competentes (Congreso de Colombia, 1996, arts. 1, 2 y 3).
 
-**Ley 336 de 1996 y Decreto 1079 de 2015 · Regulación del transporte público**
+En el proyecto, esta norma permite contextualizar las operaciones del SITVM dentro del marco general del transporte público. Los algoritmos desarrollados no tienen como finalidad definir las tarifas del servicio, sino procesar la información y aplicar las reglas de liquidación establecidas para el caso de estudio.
 
-La Ley 336 de 1996 adopta el Estatuto Nacional de Transporte y establece el marco general para la regulación y reglamentación de los diferentes modos de transporte público en Colombia. Esta disposición resulta relevante porque las operaciones del SITVM intervienen en procesos relacionados con la prestación del servicio, el registro de los viajes y el cálculo de los cobros a los usuarios.
+**Decreto 1079 de 2015 · Decreto Único Reglamentario del Sector Transporte**
 
-Por su parte, el Decreto 1079 de 2015 compila la reglamentación del sector transporte. En sus disposiciones sobre transporte público urbano y metropolitano contempla la regulación del servicio y establece aspectos relacionados con la competencia de las autoridades para definir las condiciones de prestación y las tarifas.
+Este decreto compila la reglamentación del sector transporte en Colombia. Dentro de sus disposiciones relacionadas con el transporte masivo, el artículo 2.2.1.2.1.2.5 establece criterios para determinar las necesidades del servicio mediante estudios de demanda, áreas, zonas de operación y asignación de rutas y equipos. Por su parte, el artículo 2.2.1.2.1.2.6 contempla las rutas de alimentación y su integración con el sistema de transporte masivo (Presidencia de la República de Colombia, 2015, arts. 2.2.1.2.1.2.5 y 2.2.1.2.1.2.6).
 
-Estas disposiciones son importantes para la operación de liquidación del tope tarifario, ya que el algoritmo no debe establecer valores de cobro por decisión propia ni modificar las condiciones tarifarias. Su función consiste en aplicar correctamente las tarifas y los productos definidos para el sistema, identificando la combinación de menor costo que corresponda a los viajes realizados por cada usuario.
+Estas disposiciones permiten reconocer la importancia de contar con información confiable para la planificación y operación del transporte masivo. En este sentido, los resultados de los algoritmos del proyecto pueden servir como apoyo para el procesamiento de los registros y el análisis de la información, sin reemplazar las decisiones que corresponden a las autoridades competentes.
 
-Por esta razón, la programación dinámica debe utilizar los valores tarifarios establecidos en el caso y garantizar que el resultado corresponda al costo mínimo permitido. Además, la reconstrucción de las compras permite explicar cómo se obtuvo el valor liquidado y facilita la revisión de posibles diferencias.
+**Buenas prácticas para el tratamiento de la información**
 
-**Buenas prácticas aplicadas al diseño algorítmico**
+Además del marco normativo, el proyecto contempla prácticas orientadas a preservar la confiabilidad de los resultados:
 
-Además del cumplimiento de las disposiciones normativas, el desarrollo considera buenas prácticas que contribuyen a mantener la confiabilidad y trazabilidad de la información:
+- **Conservación de los datos originales:** mantener los archivos recibidos sin modificaciones para facilitar su revisión y trazabilidad.
+- **Exactitud:** verificar que las operaciones produzcan resultados acordes con las condiciones establecidas en el caso.
+- **Control de acceso:** limitar el uso de la información a las personas y procesos que la necesitan.
+- **Uso adecuado de los datos:** evitar que la información de las validaciones sea utilizada para finalidades diferentes a las autorizadas.
 
-- **Conservación de los datos originales:** las estrategias trabajan sobre los datos de entrada sin modificar el archivo original. Esto permite mantener un registro de referencia para revisar los resultados y detectar inconsistencias.
-- **Exactitud de los resultados:** las operaciones deben respetar las condiciones definidas en el problema. La eliminación de duplicados no debe descartar validaciones diferentes, la liquidación tarifaria debe encontrar el costo mínimo y la detección de congestión debe identificar el tramo de mayor suma.
-- **Verificación de las soluciones:** se utilizan pruebas con casos límite, ejemplos calculados manualmente y comparación entre estrategias cuando existe una solución de referencia. Esto permite detectar errores antes de considerar los resultados como válidos.
-- **Control del acceso a la información:** como recomendación para una implementación en producción, los registros que permitan identificar los desplazamientos de los usuarios deben estar disponibles únicamente para las personas y procesos autorizados.
-- **Uso limitado de la información:** los datos de validación deben emplearse para las finalidades operativas del SITVM, evitando su utilización para actividades que no estén justificadas por el servicio.
-
-En conclusión, el desarrollo del SITVM debe combinar el cumplimiento de las disposiciones sobre protección de datos personales y regulación del transporte con buenas prácticas de desarrollo y procesamiento de información. La conservación de los registros originales, la exactitud de los cálculos, la verificación de los resultados y el control del acceso contribuyen a que las soluciones algorítmicas sean confiables y permitan revisar las operaciones realizadas.
+En conclusión, el marco normativo permite reconocer que la solución no debe enfocarse únicamente en la eficiencia de los algoritmos. También debe considerar la protección de la información y las condiciones generales que regulan el servicio de transporte público.
 
 ### 6.5 Sostenibilidad de la decisión
 
@@ -1000,6 +993,14 @@ python src/tope_tarifario/medicion.py
 ```
 
 `medicion.py` imprime en la terminal los factores al duplicar `d`, la extrapolación a 950.000 tarjetas y la energía estimada, y vuelve a generar `tiempo_vs_n.png` y `operaciones_vs_n.png`. Como la semilla es fija, las instancias y el número de operaciones son siempre los mismos; los tiempos cambian un poco según el computador.
+
+## 9. Referencias
+
+Congreso de Colombia. (1996). *Ley 336 de 1996. Por la cual se adopta el Estatuto Nacional de Transporte.* Función Pública. https://www1.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=346
+
+Congreso de Colombia. (2012). *Ley 1581 de 2012. Por la cual se dictan disposiciones generales para la protección de datos personales.* Función Pública. https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981
+
+Presidencia de la República de Colombia. (2015). *Decreto 1079 de 2015. Por medio del cual se expide el Decreto Único Reglamentario del Sector Transporte.* Función Pública. https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=77889
 
 ### Estructura del repositorio
 
