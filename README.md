@@ -17,9 +17,16 @@
 ## 1. Análisis del problema
 
 ### 1.1 Descripción del problema computacional
-_Pendiente para la entrega del 23 de noviembre._
 
-> El proceso nocturno completo del SITVM (las cuatro operaciones), la ventana de 4 h y por qué hoy no cabe (> 8 h).
+El Sistema Integrado de Transporte del Valle Metropolitano (SITVM) necesita procesar diariamente la información generada por las validaciones de los usuarios en los diferentes medios de transporte que lo conforman, entre ellos el metro, las líneas de cable y los buses alimentadores.
+
+Este procesamiento se realiza durante la noche mediante un proceso por lotes que debe preparar la información para las áreas de Recaudo, Atención al Usuario y Planeación. Para ello, se deben ejecutar cuatro operaciones principales: eliminar las validaciones duplicadas, ordenar los registros por tarjeta y fecha, identificar los intervalos de mayor congestión en las estaciones y calcular el costo mínimo que debe pagar cada usuario según los productos tarifarios disponibles.
+
+Actualmente, el procesamiento completo tarda más de ocho horas, mientras que el tiempo disponible para realizarlo es de cuatro horas, entre las 00:00 y las 04:00. Esta diferencia representa un problema operativo, ya que a las 04:30 comienzan a abrir las estaciones y los validadores necesitan disponer de información actualizada, especialmente de las listas de tarjetas reportadas como robadas o extraviadas.
+
+Parte de la demora se relaciona con las estrategias utilizadas actualmente. Por ejemplo, la eliminación de duplicados compara cada validación con los registros previamente aceptados; el ordenamiento utiliza el método de inserción; la detección de congestión evalúa todos los intervalos consecutivos posibles; y la liquidación del tope tarifario explora combinaciones de productos, recurriendo a una regla simplificada cuando el procesamiento resulta demasiado costoso.
+
+Por lo tanto, el problema consiste en analizar e implementar estrategias algorítmicas que permitan mejorar el rendimiento de las operaciones seleccionadas, manteniendo la exactitud de los resultados y respetando las restricciones del sistema. El objetivo es contribuir a que el procesamiento pueda ejecutarse dentro de la ventana nocturna disponible, sin perder validaciones ni afectar los cobros de los usuarios.
 
 ### 1.2 Entradas, salidas y restricciones
 
@@ -63,7 +70,43 @@ Al cierre de cada mes, el sistema debe revisar cada tarjeta personalizada para v
 | Potencia del servidor | vatios | ≈ 500 W |
 
 #### Operación 3 · Franjas de congestión
-_Pendiente para la entrega del 23 de noviembre._
+
+La operación busca identificar, para cada estación del sistema, el intervalo consecutivo de mayor congestión a partir del balance neto de pasajeros registrado cada cinco minutos. Este balance corresponde a la diferencia entre los pasajeros que ingresan a la plataforma y los que son evacuados mediante los trenes. El resultado permite reconocer los periodos en los que se presenta la mayor acumulación de pasajeros.
+
+**Entradas:**
+
+- **`saldos`**: lista de números enteros que representa el balance neto de pasajeros de una estación en cada intervalo de cinco minutos. Cada posición corresponde a un intervalo de tiempo y su valor puede ser positivo, negativo o cero.
+- **Datos por estación**: la operación se realiza sobre la secuencia de saldos de cada estación de manera independiente. El sistema cuenta con 80 estaciones.
+- **Periodo de análisis**: se pueden procesar registros históricos de aproximadamente dos años, equivalentes a cerca de 166.000 intervalos de cinco minutos por estación.
+
+**Salidas:**
+
+- **Intervalo de mayor congestión**: tramo de intervalos consecutivos cuya suma de balances netos sea la mayor de toda la secuencia.
+- **Índice de inicio (`inicio`)**: posición del primer intervalo que conforma el tramo encontrado.
+- **Índice de finalización (`fin`)**: posición del último intervalo que conforma el tramo encontrado. Los índices comienzan en 0 y ambos extremos se incluyen.
+- **Suma máxima (`suma`)**: valor total del balance neto acumulado en el intervalo identificado.
+
+La operación devuelve una tupla con la estructura `(inicio, fin, suma)`.
+
+**Restricciones:**
+
+- **Continuidad del intervalo**: el tramo seleccionado debe estar formado por intervalos consecutivos, sin saltarse posiciones de la secuencia.
+- **Resultado exacto**: se debe encontrar el intervalo cuya suma sea la máxima posible. No se permiten aproximaciones ni resultados que omitan un intervalo con una suma superior.
+- **Valores negativos**: los balances netos pueden ser negativos, por lo que la estrategia debe contemplar tanto acumulaciones como periodos en los que la cantidad de pasajeros evacuados supera la cantidad de pasajeros que ingresan.
+- **Tamaño de los datos**: cada estación puede contar con aproximadamente 166.000 registros para un periodo histórico de dos años. El análisis debe considerar este volumen, ya que evaluar todos los intervalos consecutivos posibles puede requerir un tiempo de ejecución elevado.
+- **Frecuencia de registro**: los datos se generan cada cinco minutos, lo que equivale a 288 intervalos por día si se considera un día completo. Para el escenario operativo del caso se manejan aproximadamente 228 intervalos diarios.
+- **Infraestructura**: el procesamiento se realiza en un único servidor de aproximadamente 500 W, sin procesamiento paralelo ni distribuido.
+
+| Elemento | Unidad | Característica del caso |
+|---|---|---|
+| Intervalo de registro | Minutos | 5 |
+| Registros diarios por estación | Intervalos | ≈ 228 |
+| Estaciones | Estaciones | 80 |
+| Periodo histórico | Años | 2 |
+| Registros por estación (dos años) | Intervalos | ≈ 166.000 |
+| Balance neto | Pasajeros | Puede ser positivo, negativo o cero |
+| Resultado | Tupla | `(inicio, fin, suma)` |
+| Potencia del servidor | Vatios | ≈ 500 W |
 
 ### 1.3 Operaciones críticas del proceso
 _Pendiente para la entrega del 23 de noviembre._
