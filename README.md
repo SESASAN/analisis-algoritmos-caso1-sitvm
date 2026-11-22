@@ -208,18 +208,18 @@ Una solución exhaustiva vuelve a calcular C(8) y C(9) cada vez que encuentra es
 
 **Interpretación de los resultados:**
 
-- **Día 5:** la diferencia entre pagar por separado y comprar el semanal es de apenas 300 pesos. Los pagos diarios de los días 5 al 8 suman 36.300, mientras que el semanal cuesta 36.000.
-- **Día 1:** comprar el semanal desde este día resulta más caro por dos motivos: cubre los días 2 y 3, que no tienen viajes, y no alcanza a cubrir el día 8, que debe pagarse por separado (C(8) = 9.500). Por eso, esta alternativa cuesta 36.000 + 9.500 = 45.500. Es mejor pagar el pasaje del primer día y comenzar el semanal en el día 4.
+- **Día 5:** la diferencia entre pagar por separado y comprar el semanal es de apenas $300. Los pagos diarios de los días 5 al 8 suman $36.300, mientras que el semanal cuesta $36.000.
+- **Día 1:** comprar el semanal desde este día resulta más caro por dos motivos: cubre los días 2 y 3, que no tienen viajes, y no alcanza a cubrir el día 8, que debe pagarse por separado (C(8) = $9.500). Por eso, esta alternativa cuesta $36.000 + $9.500 = $45.500. Es mejor pagar el pasaje del primer día y comenzar el semanal en el día 4.
 
 **Compras seleccionadas.** Para reconstruirlas, se comienza en el día 1 y se sigue la opción que ganó en cada fila:
 
-- **Día 1:** se compra un pasaje de 3.900.
+- **Día 1:** se compra un pasaje de $3.900.
 - **Días 2 y 3:** no se compra nada porque no hay viajes.
-- **Día 4:** se compra un semanal de 36.000. Este cubre hasta el día 10, por lo que ya no es necesario realizar más compras durante el periodo.
+- **Día 4:** se compra un semanal de $36.000. Este cubre hasta el día 10, por lo que ya no es necesario realizar más compras durante el periodo.
 
-**Costo total: 39.900.** Los resultados de los días 5 al 8 no se utilizan en la reconstrucción, porque el semanal comprado el día 4 ya cubre esos viajes.
+**Costo total: $39.900.** Los resultados de los días 5 al 8 no se utilizan en la reconstrucción, porque el semanal comprado el día 4 ya cubre esos viajes.
 
-**Comparación con la regla actual:** en esta misma instancia la regla cobra 45.500, es decir, 5.600 pesos más que el costo óptimo, porque solo aplica el semanal sobre el bloque fijo de los días 1 a 7 (ver §5.1).
+**Comparación con la regla actual:** en esta misma instancia la regla cobra $45.500, es decir, $5.600 pesos más que el costo óptimo, porque solo aplica el semanal sobre el bloque fijo de los días 1 a 7 (ver 5.1).
 
 #### Recurrencia
 
@@ -236,7 +236,7 @@ C(t)   = mín{ hoy(t) + C(t+1),
 **Significado de cada elemento:**
 
 - **C(t):** representa el costo mínimo para cubrir los viajes desde el día t hasta el final del periodo. Se asume que los días anteriores ya están pagos y que ninguna compra anterior cubre el día actual. El resultado final es C(1), y la devolución se calcula como `max(0, cobrado − C(1))`.
-- **hoy(t):** calcula la alternativa más económica para pagar únicamente el día t, comparando los pasajes individuales con el pase diario. A partir de 3 viajes conviene el diario, porque 11.700 es mayor que 9.500.
+- **hoy(t):** calcula la alternativa más económica para pagar únicamente el día t, comparando los pasajes individuales con el pase diario. A partir de 3 viajes conviene el diario, porque $11.700 es mayor que $9.500.
 - **Las tres alternativas:** cada opción suma el precio de la compra actual al costo mínimo de los días que todavía quedan sin cubrir. Si se paga solo el día actual, se continúa desde t + 1; con el semanal, desde t + 7; y con el mensual, desde t + 30.
 - **El límite d + 1:** evita consultar posiciones fuera de la tabla cuando un pase supera la duración del periodo. En ese caso, se llega al caso base.
 - **Días sin viajes:** no requieren compras, por lo que se conserva el costo calculado para el día siguiente.
@@ -835,59 +835,51 @@ _Pendiente para la entrega del 23 de noviembre._
 
 ### 6.2 Preguntas de impacto del caso (personas, normativa, crecimiento)
 
-Las decisiones relacionadas con la optimización del proceso nocturno del SITVM no tienen únicamente consecuencias sobre el rendimiento computacional. También pueden afectar la economía de los usuarios, la privacidad de su información y la capacidad del sistema para responder al crecimiento de la demanda. A continuación, se analizan las tres situaciones planteadas en el caso.
+Las decisiones relacionadas con la optimización del proceso nocturno del SITVM no tienen únicamente consecuencias sobre el rendimiento computacional. También pueden afectar la economía de los usuarios, la privacidad de su información y la capacidad del sistema para responder al crecimiento de la demanda. A continuación, se analizan estos aspectos.
 
-**Personas: ¿quién asume el costo cuando una validación se cobra dos veces o cuando el tope se liquida mal?**
+**Personas: ¿quién puede verse afectado por las decisiones del sistema?**
 
-Cuando una validación se registra más de una vez y genera un cobro duplicado, el primer afectado es el usuario, porque se descuenta de su tarjeta un valor que no corresponde a un viaje adicional. De igual manera, cuando el cálculo del tope tarifario no identifica la combinación más económica de productos, el usuario puede terminar pagando más de lo establecido por la política tarifaria.
+Los usuarios del transporte público son los principales afectados cuando el procesamiento de las validaciones o la liquidación tarifaria produce resultados incorrectos. Estas situaciones pueden tener mayor impacto en las personas que utilizan el servicio con frecuencia y en quienes cuentan con tarifas diferenciales, como estudiantes, adultos mayores y personas con discapacidad.
 
-Estas situaciones pueden tener un impacto económico mayor en las personas que utilizan el transporte público con frecuencia, ya que realizan más viajes y, por lo tanto, están expuestas a que los errores se acumulen. También deben considerarse los estudiantes, adultos mayores y personas con discapacidad, quienes cuentan con tarifas diferenciales y pueden tener menores ingresos. Para estos usuarios, incluso valores aparentemente pequeños pueden representar una afectación importante dentro de sus gastos cotidianos.
+Además de los usuarios, las áreas de Recaudo, Atención al Usuario y Planeación dependen de que la información procesada sea confiable y esté disponible oportunamente. Por esta razón, la optimización debe conservar la exactitud de los resultados y permitir que las áreas del sistema desarrollen sus actividades con información consistente. Las consecuencias concretas de los errores algorítmicos se desarrollan en la sección 6.3.
 
-Aunque el sistema de transporte debe asumir la responsabilidad de corregir los cobros incorrectos y atender las reclamaciones, el usuario soporta inicialmente las consecuencias del error, tanto económicas como administrativas. Por esta razón, las estrategias algorítmicas deben garantizar que las validaciones legítimas no se eliminen y que los cobros correspondan exactamente a los viajes realizados y a las condiciones tarifarias establecidas.
+**Normativa: ¿qué disposiciones deben considerarse en el desarrollo de la solución?**
 
-**Normativa: ¿qué disposiciones condicionan la solución y cómo deben respetarse?**
-
-El procesamiento de la información del SITVM debe considerar dos aspectos principales: la protección de los datos personales de los usuarios y la regulación del servicio público de transporte.
-
-En materia de privacidad, la Ley 1581 de 2012 establece disposiciones para el tratamiento de datos personales y reconoce los derechos de los titulares sobre la información registrada en bases de datos. Esto resulta relevante porque los registros del sistema contienen identificadores de tarjetas, estaciones y fechas y horas de validación. Al relacionar estos datos es posible reconstruir recorridos y reconocer patrones de desplazamiento de una persona. Por lo tanto, su tratamiento debe responder a finalidades legítimas y contar con medidas que eviten el acceso, uso o divulgación no autorizados.
-
-En cuanto al servicio de transporte, la Ley 336 de 1996 establece el marco general del Estatuto Nacional de Transporte, mientras que el Decreto 1079 de 2015 reglamenta el sector y contempla disposiciones sobre la prestación del transporte público y la competencia de las autoridades para regular sus condiciones y tarifas. En consecuencia, el cálculo de los cobros y las devoluciones no puede depender de decisiones arbitrarias del algoritmo, sino que debe respetar las tarifas y condiciones autorizadas por la autoridad competente.
-
-Frente a estas disposiciones, el diseño del sistema debe limitar el acceso a la información personal, utilizar los registros únicamente para los fines operativos correspondientes y conservar el archivo original de validaciones sin modificaciones. Además, debe permitir verificar los resultados del procesamiento y reconstruir las operaciones realizadas ante una reclamación. Estas medidas contribuyen a proteger la privacidad, mantener la trazabilidad y evitar cobros que no correspondan a las condiciones del servicio.
+El procesamiento del SITVM debe considerar las disposiciones colombianas sobre protección de datos personales y regulación del transporte público. Entre las principales referencias se encuentran la Ley 1581 de 2012, relacionada con el tratamiento de datos personales, la Ley 336 de 1996, que establece el Estatuto Nacional de Transporte, y el Decreto 1079 de 2015, que compila la reglamentación del sector transporte. Su aplicación al caso y los principios que deben orientar el tratamiento de la información se explican en la sección 6.4.
 
 **Crecimiento: ¿cómo se comportan las estrategias recomendadas si entra una tercera línea de cable y las validaciones diarias crecen un 30 %?**
 
 El caso establece que el SITVM procesa aproximadamente 1.400.000 validaciones en un día habitual. Si se incorpora una tercera línea de cable y el volumen aumenta un 30 %, el sistema tendría que procesar aproximadamente 1.820.000 validaciones diarias, es decir, 420.000 registros adicionales.
 
-Este incremento representa un desafío para la capacidad de procesamiento, especialmente porque el sistema trabaja sobre un único servidor de aproximadamente 500 W y dispone de una ventana nocturna limitada. Por esta razón, las estrategias recomendadas deben presentar un comportamiento que permita manejar el crecimiento sin comprometer la exactitud de los resultados.
+Este incremento representa un desafío para la capacidad de procesamiento, especialmente porque el sistema trabaja sobre un único servidor de aproximadamente 500 W y dispone de una ventana nocturna limitada. Por esta razón, las estrategias seleccionadas deben permitir manejar mayores volúmenes de información sin comprometer la exactitud de los resultados.
 
-Para la operación de detección de congestión, la estrategia de fuerza bruta presenta una complejidad temporal cuadrática, \(O(n^2)\), mientras que la estrategia de dividir y vencer presenta una complejidad de \(O(n\log n)\). Por lo tanto, cuando aumenta el tamaño de la secuencia de entrada, la estrategia de dividir y vencer ofrece un crecimiento del tiempo de ejecución considerablemente menor. Esto resulta importante para el análisis de los históricos de las estaciones, que pueden alcanzar aproximadamente 166.000 intervalos por estación.
+Para la operación de detección de congestión, la fuerza bruta presenta una complejidad temporal de Θ(n²), mientras que dividir y vencer tiene una complejidad de Θ(n log n). Sin embargo, la estrategia recomendada en este proyecto es el algoritmo de Kadane, cuya complejidad temporal es Θ(n) y cuyo espacio adicional es Θ(1). Por lo tanto, Kadane presenta un crecimiento más favorable a medida que aumenta la cantidad de intervalos analizados y resulta la alternativa más eficiente entre las tres estrategias consideradas.
 
-Por otra parte, para la liquidación del tope tarifario, la programación dinámica evita explorar repetidamente todas las combinaciones posibles de productos. Su procesamiento por tarjeta depende de la cantidad de días del mes, que se mantiene entre 28 y 31. Por ello, el costo de resolver una tarjeta no aumenta directamente con el número de validaciones diarias; sin embargo, si el crecimiento también implica más tarjetas activas que deban liquidarse, el costo total de la operación aumentará en proporción a la cantidad de tarjetas procesadas.
+Por otra parte, para la liquidación del tope tarifario se recomienda la programación dinámica, cuya complejidad temporal y espacial por tarjeta es Θ(d), donde d representa la cantidad de días del periodo de liquidación. Como los meses tienen una duración de entre 28 y 31 días, el aumento de las validaciones diarias no incrementa directamente el tamaño de la tabla utilizada para resolver cada tarjeta. Sin embargo, si el crecimiento de la demanda también implica un mayor número de tarjetas activas, el costo total de la liquidación aumentará proporcionalmente a la cantidad de tarjetas procesadas.
 
-Es importante aclarar que el incremento del 30 % en las validaciones no significa necesariamente que todas las entradas de las operaciones aumenten en esa misma proporción. Por ejemplo, la cantidad de intervalos de cinco minutos de una estación depende del periodo analizado, mientras que el número de tarjetas que deben liquidarse depende de cuántos usuarios estén activos durante el mes.
+Es importante aclarar que el incremento del 30 % en las validaciones no significa necesariamente que todas las entradas de las operaciones aumenten en esa misma proporción. Por ejemplo, la cantidad de intervalos de cinco minutos de una estación depende del periodo histórico analizado, mientras que el número de tarjetas que deben liquidarse depende de la cantidad de usuarios activos durante el mes.
 
-En consecuencia, las estrategias de dividir y vencer y programación dinámica ofrecen mejores condiciones para responder al crecimiento esperado que los procedimientos exhaustivos actuales. Sin embargo, su viabilidad definitiva debe comprobarse mediante las mediciones experimentales y las estimaciones de ejecución para los volúmenes proyectados.
+En consecuencia, Kadane y la programación dinámica ofrecen mejores condiciones para responder al crecimiento esperado que las estrategias menos eficientes que reemplazan. No obstante, su viabilidad definitiva debe comprobarse mediante las mediciones experimentales y las estimaciones de ejecución para los volúmenes proyectados.
 
 ### 6.3 Consecuencias sobre las personas
 
-Las decisiones algorítmicas del SITVM pueden tener consecuencias directas sobre las personas que utilizan el transporte público y sobre las áreas encargadas de su operación. Un resultado incorrecto puede generar cobros indebidos, pérdida de información o decisiones de planificación basadas en datos equivocados. De igual manera, un procesamiento que no termine dentro del tiempo establecido puede afectar la disponibilidad de información necesaria para iniciar el servicio.
+Las decisiones algorítmicas del SITVM pueden tener consecuencias directas e indirectas sobre los usuarios y sobre las áreas encargadas de la operación. Un resultado incorrecto puede generar cobros indebidos, pérdida de información o decisiones de planificación basadas en datos equivocados. De igual manera, un procesamiento que no termine dentro del tiempo establecido puede afectar la disponibilidad de información necesaria para iniciar el servicio.
 
 **Errores en la eliminación de validaciones duplicadas**
 
-Si el algoritmo elimina una validación legítima al confundirla con un registro duplicado, el viaje realizado podría no quedar correctamente registrado. Por el contrario, si una validación repetida permanece en el sistema, podría ocasionar un cobro adicional por un viaje que no se realizó. En ambos casos, el usuario puede verse afectado económicamente y tener que realizar reclamaciones para corregir la información.
+Si el algoritmo elimina una validación legítima al confundirla con un registro duplicado, el viaje realizado podría no quedar correctamente registrado. Por el contrario, si una validación repetida permanece en el sistema, podría ocasionar un cobro adicional por un viaje que no se realizó. En ambos casos, el usuario puede verse afectado y necesitar una revisión para corregir la información.
 
 Para reducir estos riesgos, la identificación de duplicados debe respetar exactamente la condición establecida en el caso: dos validaciones son iguales únicamente cuando coinciden el identificador del validador, el identificador de la tarjeta y la marca de tiempo. Esto evita eliminar registros que representan viajes diferentes. También es importante conservar el archivo original sin modificaciones, de manera que sea posible revisar los datos recibidos ante cualquier inconsistencia.
 
 **Errores en la liquidación del tope tarifario**
 
-Un cálculo incorrecto del tope tarifario puede ocasionar que una persona pague más de lo que corresponde por los viajes realizados durante el periodo. Esta situación puede afectar especialmente a los usuarios frecuentes y a quienes cuentan con tarifas diferenciales, como estudiantes, adultos mayores y personas con discapacidad.
+Un cálculo incorrecto del tope tarifario puede ocasionar que una persona pague más de lo que corresponde por los viajes realizados durante el periodo. Esto también puede generar reclamaciones y trabajo adicional para las áreas encargadas de revisar y corregir los cobros.
 
-Para prevenir estos errores, se recomienda la programación dinámica, que calcula el costo mínimo exacto y permite reconstruir las compras de productos que justifican el resultado. La comparación con la solución exhaustiva en diferentes instancias y las pruebas de devolución exacta permiten verificar que el valor cobrado menos la devolución corresponda al costo mínimo. De esta manera, se busca evitar que los usuarios asuman cobros superiores a los establecidos.
+Para prevenir estos errores, se recomienda la programación dinámica, que calcula el costo mínimo exacto y permite reconstruir las compras de productos que justifican el resultado. La comparación con la solución exhaustiva en diferentes instancias y las pruebas de devolución exacta permiten verificar que el valor cobrado menos la devolución corresponda al costo mínimo. De esta manera, se busca evitar cobros superiores a los establecidos.
 
 **Errores en la detección de franjas de congestión**
 
-La operación de detección de congestión también tiene consecuencias sobre las personas, aunque su afectación es principalmente indirecta. Si el algoritmo identifica un tramo que no corresponde al de mayor acumulación de pasajeros, el área de Planeación podría tomar decisiones basadas en información incorrecta. Esto puede afectar la distribución de recursos y la planificación de la operación en las estaciones.
+La operación de detección de congestión tiene consecuencias principalmente indirectas. Si el algoritmo identifica un tramo que no corresponde al de mayor acumulación de pasajeros, el área de Planeación podría tomar decisiones basadas en información incorrecta. Esto puede afectar la distribución de recursos y la planificación de la operación en las estaciones.
 
 Para reducir este riesgo, la estrategia debe encontrar el tramo consecutivo cuya suma sea realmente la máxima, respetando incluso los casos en los que todos los balances netos sean negativos. En este proyecto se recomienda el algoritmo de Kadane, que resuelve el problema en tiempo Θ(n) y espacio adicional Θ(1), sin perder exactitud. La comparación con las estrategias de fuerza bruta y dividir y vencer permite utilizar soluciones de referencia para verificar los resultados.
 
@@ -895,7 +887,7 @@ Para reducir este riesgo, la estrategia debe encontrar el tramo consecutivo cuya
 
 El tiempo de ejecución también puede afectar a los usuarios. El SITVM dispone de una ventana de cuatro horas, entre las 00:00 y las 04:00, para completar el procesamiento nocturno. Si las operaciones no terminan dentro de ese periodo, la información podría no estar disponible oportunamente para las áreas que la necesitan. Una de las consecuencias más importantes sería que los validadores no contaran con las listas actualizadas de tarjetas reportadas como robadas o extraviadas antes de la apertura de las estaciones a las 04:30.
 
-Esto puede generar dificultades en los controles del sistema y afectar tanto al personal encargado de la operación como a los usuarios. Por esta razón, no basta con que los algoritmos produzcan resultados correctos: también deben hacerlo dentro del tiempo disponible. La selección de estrategias con menor complejidad y la medición de sus tiempos de ejecución permiten evaluar este requisito.
+Esto puede generar dificultades en los controles del sistema y afectar tanto al personal encargado de la operación como a los usuarios. Por esta razón, no basta con que los algoritmos produzcan resultados correctos: también deben hacerlo dentro del tiempo disponible. La selección de estrategias eficientes y la medición de sus tiempos de ejecución permiten evaluar este requisito.
 
 **Medidas para reducir las consecuencias**
 
@@ -909,45 +901,38 @@ A partir de los riesgos identificados, el diseño del sistema contempla los sigu
 
 En conclusión, la eficiencia de los algoritmos debe estar acompañada de exactitud, trazabilidad y cumplimiento de los tiempos establecidos. Estas condiciones permiten reducir el riesgo de cobros incorrectos, pérdida de información y decisiones operativas equivocadas, procurando que la optimización del SITVM también contribuya a proteger a las personas que dependen del servicio.
 
-### 6.4 Marco normativo y buenas prácticas
+### 6.4 Marco normativo
 
-El diseño de las soluciones algorítmicas del SITVM debe considerar las disposiciones relacionadas con la protección de los datos personales y la regulación del servicio público de transporte en Colombia. Estas normas son relevantes porque el sistema procesa información asociada a las tarjetas de los usuarios, registra sus desplazamientos y realiza cálculos que determinan los valores que deben pagar por el servicio.
+El desarrollo del SITVM debe considerar las disposiciones relacionadas con la protección de datos personales y la regulación del transporte público en Colombia. Estas normas permiten establecer criterios para el manejo de la información y para el contexto en el que se realizan las operaciones del sistema.
 
 **Ley 1581 de 2012 · Protección de datos personales**
 
-La Ley 1581 de 2012 establece disposiciones generales para la protección de datos personales y reconoce el derecho de las personas a conocer, actualizar y rectificar la información que se encuentre registrada sobre ellas en bases de datos. Su aplicación es importante para el SITVM porque los registros de validación contienen identificadores de tarjetas, estaciones y marcas de tiempo. Aunque estos campos no necesariamente muestran por sí solos el nombre de una persona, pueden relacionarse con un usuario y permitir identificar sus recorridos y hábitos de desplazamiento.
+Esta ley establece disposiciones generales para proteger los datos personales. Sus artículos 1 y 2 establecen el objeto y el ámbito de aplicación de la norma, mientras que el artículo 4 contempla principios para el tratamiento de datos personales, como la finalidad, la libertad, la veracidad o calidad de la información, el acceso y la circulación restringida, la seguridad y la confidencialidad (Congreso de Colombia, 2012, arts. 1, 2 y 4).
 
-El artículo 4 establece principios que deben respetarse durante el tratamiento de esta información:
+En el SITVM, los registros de validación pueden contener información relacionada con una tarjeta, el momento y el lugar de un viaje. Cuando estos datos permiten asociar la información con una persona natural, su tratamiento debe considerar los principios establecidos en esta ley. Por esta razón, es importante conservar la integridad de los registros, limitar el acceso a la información y utilizarla para las finalidades autorizadas.
 
-- **Finalidad:** los datos deben utilizarse para propósitos legítimos y previamente definidos. En el SITVM, la información de las validaciones debe utilizarse para las actividades propias del procesamiento, como la eliminación de duplicados, la liquidación tarifaria y el análisis de congestión.
-- **Veracidad o calidad:** la información debe ser completa, exacta, actualizada y comprobable. Esto se relaciona directamente con la necesidad de no eliminar validaciones legítimas ni modificar incorrectamente los registros recibidos.
-- **Acceso y circulación restringida:** la información personal debe estar disponible únicamente para las personas autorizadas, de acuerdo con las condiciones establecidas por la ley.
-- **Seguridad:** deben adoptarse medidas técnicas, humanas y administrativas para evitar la pérdida, adulteración, consulta o utilización no autorizada de los registros.
-- **Confidencialidad:** quienes intervengan en el tratamiento de los datos deben mantener la reserva de la información personal.
+**Ley 336 de 1996 · Estatuto Nacional de Transporte**
 
-En relación con estos principios, el proyecto establece que el archivo original de validaciones debe conservarse sin modificaciones, lo que permite mantener la integridad de los registros recibidos y facilitar su verificación. También se considera una buena práctica limitar el acceso a la información y evitar que los datos asociados a las tarjetas sean utilizados para propósitos diferentes a los establecidos para el sistema.
+Esta ley adopta el Estatuto Nacional de Transporte y establece los principios y criterios que sirven de fundamento para la regulación y reglamentación del transporte público en Colombia. Su artículo 1 incluye expresamente el transporte público masivo y terrestre; el artículo 2 establece la seguridad y la protección de los usuarios como prioridades del sector, y el artículo 3 contempla las condiciones de seguridad, comodidad y accesibilidad que deben verificar las autoridades competentes (Congreso de Colombia, 1996, arts. 1, 2 y 3).
 
-**Ley 336 de 1996 y Decreto 1079 de 2015 · Regulación del transporte público**
+En el proyecto, esta norma permite contextualizar las operaciones del SITVM dentro del marco general del transporte público. Los algoritmos desarrollados no tienen como finalidad definir las tarifas del servicio, sino procesar la información y aplicar las reglas de liquidación establecidas para el caso de estudio.
 
-La Ley 336 de 1996 adopta el Estatuto Nacional de Transporte y establece el marco general para la regulación y reglamentación de los diferentes modos de transporte público en Colombia. Esta disposición resulta relevante porque las operaciones del SITVM intervienen en procesos relacionados con la prestación del servicio, el registro de los viajes y el cálculo de los cobros a los usuarios.
+**Decreto 1079 de 2015 · Decreto Único Reglamentario del Sector Transporte**
 
-Por su parte, el Decreto 1079 de 2015 compila la reglamentación del sector transporte. En sus disposiciones sobre transporte público urbano y metropolitano contempla la regulación del servicio y establece aspectos relacionados con la competencia de las autoridades para definir las condiciones de prestación y las tarifas.
+Este decreto compila la reglamentación del sector transporte en Colombia. Dentro de sus disposiciones relacionadas con el transporte masivo, el artículo 2.2.1.2.1.2.5 establece criterios para determinar las necesidades del servicio mediante estudios de demanda, áreas, zonas de operación y asignación de rutas y equipos. Por su parte, el artículo 2.2.1.2.1.2.6 contempla las rutas de alimentación y su integración con el sistema de transporte masivo (Presidencia de la República de Colombia, 2015, arts. 2.2.1.2.1.2.5 y 2.2.1.2.1.2.6).
 
-Estas disposiciones son importantes para la operación de liquidación del tope tarifario, ya que el algoritmo no debe establecer valores de cobro por decisión propia ni modificar las condiciones tarifarias. Su función consiste en aplicar correctamente las tarifas y los productos definidos para el sistema, identificando la combinación de menor costo que corresponda a los viajes realizados por cada usuario.
+Estas disposiciones permiten reconocer la importancia de contar con información confiable para la planificación y operación del transporte masivo. En este sentido, los resultados de los algoritmos del proyecto pueden servir como apoyo para el procesamiento de los registros y el análisis de la información, sin reemplazar las decisiones que corresponden a las autoridades competentes.
 
-Por esta razón, la programación dinámica debe utilizar los valores tarifarios establecidos en el caso y garantizar que el resultado corresponda al costo mínimo permitido. Además, la reconstrucción de las compras permite explicar cómo se obtuvo el valor liquidado y facilita la revisión de posibles diferencias.
+**Buenas prácticas para el tratamiento de la información**
 
-**Buenas prácticas aplicadas al diseño algorítmico**
+Además del marco normativo, el proyecto contempla prácticas orientadas a preservar la confiabilidad de los resultados:
 
-Además del cumplimiento de las disposiciones normativas, el desarrollo considera buenas prácticas que contribuyen a mantener la confiabilidad y trazabilidad de la información:
+- **Conservación de los datos originales:** mantener los archivos recibidos sin modificaciones para facilitar su revisión y trazabilidad.
+- **Exactitud:** verificar que las operaciones produzcan resultados acordes con las condiciones establecidas en el caso.
+- **Control de acceso:** limitar el uso de la información a las personas y procesos que la necesitan.
+- **Uso adecuado de los datos:** evitar que la información de las validaciones sea utilizada para finalidades diferentes a las autorizadas.
 
-- **Conservación de los datos originales:** las estrategias trabajan sobre los datos de entrada sin modificar el archivo original. Esto permite mantener un registro de referencia para revisar los resultados y detectar inconsistencias.
-- **Exactitud de los resultados:** las operaciones deben respetar las condiciones definidas en el problema. La eliminación de duplicados no debe descartar validaciones diferentes, la liquidación tarifaria debe encontrar el costo mínimo y la detección de congestión debe identificar el tramo de mayor suma.
-- **Verificación de las soluciones:** se utilizan pruebas con casos límite, ejemplos calculados manualmente y comparación entre estrategias cuando existe una solución de referencia. Esto permite detectar errores antes de considerar los resultados como válidos.
-- **Control del acceso a la información:** como recomendación para una implementación en producción, los registros que permitan identificar los desplazamientos de los usuarios deben estar disponibles únicamente para las personas y procesos autorizados.
-- **Uso limitado de la información:** los datos de validación deben emplearse para las finalidades operativas del SITVM, evitando su utilización para actividades que no estén justificadas por el servicio.
-
-En conclusión, el desarrollo del SITVM debe combinar el cumplimiento de las disposiciones sobre protección de datos personales y regulación del transporte con buenas prácticas de desarrollo y procesamiento de información. La conservación de los registros originales, la exactitud de los cálculos, la verificación de los resultados y el control del acceso contribuyen a que las soluciones algorítmicas sean confiables y permitan revisar las operaciones realizadas.
+En conclusión, el marco normativo permite reconocer que la solución no debe enfocarse únicamente en la eficiencia de los algoritmos. También debe considerar la protección de la información y las condiciones generales que regulan el servicio de transporte público.
 
 ### 6.5 Sostenibilidad de la decisión
 
@@ -1008,6 +993,14 @@ python src/tope_tarifario/medicion.py
 ```
 
 `medicion.py` imprime en la terminal los factores al duplicar `d`, la extrapolación a 950.000 tarjetas y la energía estimada, y vuelve a generar `tiempo_vs_n.png` y `operaciones_vs_n.png`. Como la semilla es fija, las instancias y el número de operaciones son siempre los mismos; los tiempos cambian un poco según el computador.
+
+## 9. Referencias
+
+Congreso de Colombia. (1996). *Ley 336 de 1996. Por la cual se adopta el Estatuto Nacional de Transporte.* Función Pública. https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=346
+
+Congreso de Colombia. (2012). *Ley 1581 de 2012. Por la cual se dictan disposiciones generales para la protección de datos personales.* Función Pública. https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981
+
+Presidencia de la República de Colombia. (2015). *Decreto 1079 de 2015. Por medio del cual se expide el Decreto Único Reglamentario del Sector Transporte.* Función Pública. https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=77889
 
 ### Estructura del repositorio
 
