@@ -106,7 +106,7 @@ Son estimaciones: las mediciones se hicieron en un computador de escritorio y no
 
 **Operación 4 · Tope tarifario**
 
-- **Regla simplificada actual:** los primeros 30 días se dividen en bloques fijos (1–7, 8–14, 15–21, 22–28 y 29–30). Cada día cuesta lo menor entre pasajes y diario; cada bloque se limita al semanal ($36.000) y el acumulado de los 30 días, al mensual ($135.000). Por ejemplo, 7 días con 3 viajes cuestan $81.900 en pasajes, $66.500 con diarios y la regla cobra $36.000 por el bloque. En meses de 31 días, el día 31 se cobra aparte con el menor entre pasajes y diario.
+- **Regla simplificada actual:** los primeros 30 días se dividen en bloques fijos (1–7, 8–14, 15–21, 22–28 y 29–30). Cada día cuesta lo menor entre pasajes y diario; cada bloque se limita al semanal (\$36.000) y el acumulado de los 30 días, al mensual (\$135.000). Por ejemplo, 7 días con 3 viajes cuestan \$81.900 en pasajes, \$66.500 con diarios y la regla cobra \$36.000 por el bloque. En meses de 31 días, el día 31 se cobra aparte con el menor entre pasajes y diario.
 - **Duración del mes:** el periodo es un mes calendario de 28 a 31 días, según la entrada.
 - **Pases que exceden el mes:** un pase comprado al final del mes solo cubre los días que quedan, pero se paga completo, sin descuento proporcional.
 - **Perfiles diferenciales:** conservan los mismos productos y reglas con otras tarifas; la implementación usa las del perfil general.
@@ -174,9 +174,9 @@ Dividir y vencer no copia sublistas: cada subproblema se identifica con dos ente
 | 2 | 0 | se copia C(3) | | | 36.000 | — |
 | 1 | 1 | 3.900 + 36.000 = 39.900 | 36.000 + C(8) = 45.500 | 135.000 | **39.900** | pasaje |
 
-En el día 5, el semanal gana por solo $300 ($36.000 frente a $36.300 de pagar los días 5 a 8 por separado). En el día 1, el semanal sale más caro porque cubre los días 2 y 3, que no tienen viajes, y deja por fuera el día 8, que hay que pagar aparte: $36.000 + $9.500 = $45.500.
+En el día 5, el semanal gana por solo \$300 (\$36.000 frente a \$36.300 de pagar los días 5 a 8 por separado). En el día 1, el semanal sale más caro porque cubre los días 2 y 3, que no tienen viajes, y deja por fuera el día 8, que hay que pagar aparte: \$36.000 + \$9.500 = \$45.500.
 
-Siguiendo la opción ganadora desde el día 1, las compras son: **un pasaje el día 1 ($3.900) y un semanal el día 4 ($36.000)**, que cubre hasta el final. **Costo total: $39.900.** En esta misma instancia la regla actual cobra $45.500, $5.600 más, porque solo aplica el semanal sobre el bloque fijo de los días 1 a 7 (ver 5.1).
+Siguiendo la opción ganadora desde el día 1, las compras son: **un pasaje el día 1 (\$3.900) y un semanal el día 4 (\$36.000)**, que cubre hasta el final. **Costo total: \$39.900.** En esta misma instancia la regla actual cobra \$45.500, \$5.600 más, porque solo aplica el semanal sobre el bloque fijo de los días 1 a 7 (ver 5.1).
 
 #### Recurrencia
 
