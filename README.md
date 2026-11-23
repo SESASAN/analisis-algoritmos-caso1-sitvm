@@ -266,6 +266,8 @@ Su tiempo también es Θ(d): la diferencia con la programación dinámica está 
 
 ### 2.3 Operación 3 · Franjas de congestión
 
+Se diseñaron dos estrategias exactas: dividir y vencer y Kadane. La fuerza bruta, que es la estrategia actual, se conserva como referencia para la verificación y la comparación.
+
 #### Por qué el problema admite dividir y vencer
 
 Si la serie se parte en `medio`, el tramo de mayor suma está en uno de tres lugares:
@@ -337,9 +339,51 @@ En el último nivel, el mejor sufijo izquierdo suma 6 empezando en el índice 2,
 
 El contador del código suma 8 intervalos en los casos base y 8 en cada uno de los tres niveles de cruces: **32 = n(log₂ n + 1)**, frente a las **36** = n(n + 1)/2 de la fuerza bruta. Con 8 intervalos casi no hay diferencia; la ventaja aparece al crecer n.
 
+#### Segunda estrategia: Kadane (programación dinámica)
+
+**Por qué el problema admite programación dinámica.** Sea `M(i)` la mayor suma de un tramo que **termina** en el intervalo `i`. Ese tramo solo puede ser de dos formas: el intervalo `i` solo, o el mejor tramo que termina en `i − 1` extendido con `i`. Si se usara un tramo peor que termine en `i − 1`, reemplazarlo por el mejor daría una suma mayor (subestructura óptima). Además, cada `M(i)` se usa para calcular `M(i + 1)`, así que guardarlo evita recalcular los tramos desde cero, como hace la fuerza bruta. El tramo de mayor suma de toda la serie termina en algún intervalo, así que la respuesta es el mayor de los `M(i)`.
+
+**Recurrencia.**
+
+```text
+M(0) = saldo₀
+M(i) = max(saldoᵢ, M(i − 1) + saldoᵢ)        para i = 1, …, n − 1
+respuesta = max(M(0), M(1), …, M(n − 1))
+```
+
+Si `M(i − 1)` no es positivo, sumarlo no ayuda y conviene empezar un tramo nuevo en `i`. Como `M(i)` solo depende de `M(i − 1)`, no hace falta una tabla: basta una variable con la suma actual y otra con el mejor tramo visto.
+
+**Pseudocódigo.**
+
+```text
+TRAMO-MÁXIMO-KADANE(saldos):
+    si saldos está vacía: error
+    suma_actual ← 0
+    inicio_actual ← 0
+    mejor ← (0, 0, saldos[0])
+    para i desde 0 hasta n − 1:
+        si suma_actual ≤ 0:
+            suma_actual ← saldos[i]
+            inicio_actual ← i
+        si no:
+            suma_actual ← suma_actual + saldos[i]
+        si suma_actual > mejor.suma:
+            mejor ← (inicio_actual, i, suma_actual)
+    devolver mejor
+```
+
+Hace una suma por intervalo: tiempo Θ(n) y espacio adicional Θ(1). Con la serie del ejemplo anterior:
+
+| `i` | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|---|
+| Saldo | 3 | −5 | 4 | 2 | −1 | 6 | −8 | 2 |
+| `M(i)` | 3 | −2 | **4** (empieza de nuevo) | 6 | 5 | **11** | 3 | 5 |
+
+En el índice 2 la suma acumulada era −2, así que Kadane descarta lo anterior y empieza en 2. Llega al mismo tramo que dividir y vencer, **(2, 5, 11)**, con solo 8 sumas frente a 32.
+
 #### Cómo reduce el consumo energético frente a la fuerza bruta
 
-Con el servidor a una potencia casi constante de 500 W, la energía es E = P × t, así que reducir el tiempo reduce el consumo. Para el histórico de dos años de una estación, dividir y vencer hace unos 3,06 × 10⁶ sumas frente a unos 1,38 × 10¹⁰ de la fuerza bruta, unas **4.500 veces menos**, y la diferencia crece con la serie: si el histórico se duplica, la fuerza bruta cuadruplica su trabajo y dividir y vencer lo multiplica por poco más de 2. Los tiempos y la energía medidos se presentan en 4.2 y 6.1.
+Con el servidor a una potencia casi constante de 500 W, la energía es E = P × t, así que reducir el tiempo reduce el consumo. Para el histórico de dos años de una estación (n ≈ 166.000), la fuerza bruta hace unos 1,38 × 10¹⁰ sumas; dividir y vencer, unos 3,06 × 10⁶ (**unas 4.500 veces menos**), y Kadane, 166.000 (**unas 83.000 veces menos**). La diferencia crece con la serie: si el histórico se duplica, la fuerza bruta cuadruplica su trabajo, dividir y vencer lo multiplica por poco más de 2 y Kadane exactamente por 2. Los tiempos y la energía medidos se presentan en 4.2 y 6.1.
 
 ---
 
@@ -514,7 +558,7 @@ Se usa `n` para el número de intervalos de la serie de una estación. Las tres 
 
 - **Fuerza bruta (`fuerza_bruta.py`).** Para cada inicio recorre todos los finales acumulando la suma, sin recalcular el tramo desde cero. El tramo que empieza en `i` requiere `n − i` sumas, así que `T(n) = n(n + 1)/2 ∈ Θ(n²)`. El espacio adicional es Θ(1).
 - **Dividir y vencer (`dividir_y_vencer.py`).** Su recurrencia `T(n) = 2T(n/2) + Θ(n)` da **Θ(n log n)** por el teorema maestro (2.3). El contador lo confirma: para `n` potencia de 2 suma exactamente `n(log₂ n + 1)` intervalos, `n` por cada uno de los `log₂ n + 1` niveles. El espacio es Θ(log n), por la pila, porque trabaja con índices y no copia sublistas.
-- **Kadane (`kadane.py`).** Es una programación dinámica: si `M(i)` es la mayor suma de un tramo que termina en `i`, entonces `M(i) = max(saldoᵢ, M(i − 1) + saldoᵢ)` y la respuesta es el mayor `M(i)`. Como cada `M(i)` solo depende de `M(i − 1)`, basta una variable en lugar de una tabla: si la suma acumulada no es positiva, se empieza un tramo nuevo. Con una suma por intervalo, `T(n) = n`: tiempo **Θ(n)** y espacio **Θ(1)**. En el ejemplo de 2.3 obtiene el mismo tramo que dividir y vencer, `(2, 5, 11)`, con solo 8 sumas.
+- **Kadane (`kadane.py`).** Su recurrencia `M(i) = max(saldoᵢ, M(i − 1) + saldoᵢ)` (2.3) se recorre una sola vez, con una suma por intervalo: `T(n) = n`, tiempo **Θ(n)**. Como cada `M(i)` solo depende de `M(i − 1)`, guarda dos variables en lugar de una tabla: espacio **Θ(1)**.
 
 | Estrategia | Tiempo | Espacio adicional | Sumas para el ejemplo (`n = 8`) | Sumas por estación (`n ≈ 166.000`) |
 |---|---|---|---:|---:|
@@ -722,31 +766,47 @@ Estas cifras son estimaciones: suponen que el servidor consume sus 500 W solo du
 
 ### 6.2 Preguntas de impacto del caso (personas, normativa, crecimiento)
 
-**Personas: ¿quién puede verse afectado por las decisiones del sistema?**
+**Personas: ¿quién puede verse afectado por las decisiones del sistema?** Los usuarios, en especial quienes viajan con frecuencia y quienes tienen tarifas diferenciales, como estudiantes, adultos mayores y personas con discapacidad; y las áreas de Recaudo, Atención al Usuario y Planeación, que trabajan con los resultados. Los riesgos concretos y quién asume su costo se desarrollan en 6.3.
 
-Los principales afectados por un resultado incorrecto son los usuarios, en especial quienes viajan con frecuencia y quienes tienen tarifas diferenciales, como estudiantes, adultos mayores y personas con discapacidad. También dependen de estos resultados las áreas de Recaudo, Atención al Usuario y Planeación. Los riesgos concretos son:
+**Normativa: ¿qué disposiciones deben considerarse en el desarrollo de la solución?** La Ley 1581 de 2012 sobre protección de datos personales, la Ley 336 de 1996 (Estatuto Nacional de Transporte) y el Decreto 1079 de 2015, que reglamenta el sector transporte. Su aplicación al caso y las buenas prácticas que se derivan de ellas están en 6.4.
 
-- **Duplicados (operación 1):** eliminar una validación legítima deja un viaje sin registrar, y conservar una repetida genera un cobro por un viaje que no ocurrió. Por eso dos validaciones solo se consideran iguales si coinciden el validador, la tarjeta y la marca de tiempo, y el archivo original se conserva sin cambios.
-- **Tope tarifario (operación 4):** un error cobra de más y genera reclamaciones. La programación dinámica calcula el costo mínimo exacto, reconstruye las compras que lo justifican y se verificó contra la solución exhaustiva.
-- **Franjas de congestión (operación 3):** un tramo equivocado lleva a Planeación a distribuir recursos con información incorrecta. Kadane encuentra el tramo de mayor acumulación exacto, incluso cuando todos los saldos son negativos, y se verificó contra la fuerza bruta y dividir y vencer.
-- **Retrasos:** si el proceso no termina en la ventana de 00:00 a 04:00, los validadores podrían abrir a las 04:30 sin la lista actualizada de tarjetas robadas o extraviadas. No basta con que el resultado sea correcto: también debe estar listo a tiempo.
+**Crecimiento: ¿cómo se comportan las estrategias recomendadas si entra una tercera línea de cable y las validaciones diarias crecen un 30 %?** Las dos estrategias recomendadas crecen de forma lineal, así que un 30 % más de datos significa, como mucho, cerca de un 30 % más de tiempo, y ambas siguen muy por debajo de la ventana nocturna. El análisis completo está en 6.5.
 
-Para reducir estos riesgos, la solución combina exactitud, verificación contra soluciones de referencia, trazabilidad sobre el archivo original y mediciones que confirman que cada operación cabe en la ventana nocturna.
+### 6.3 Consecuencias sobre las personas
 
-**Normativa: ¿qué disposiciones deben considerarse en el desarrollo de la solución?**
+Un error en estas operaciones no se queda en el servidor: alguien termina pagándolo.
+
+| Error | Consecuencia | Quién asume el costo | Cómo lo previene la solución |
+|---|---|---|---|
+| Deduplicación incorrecta (operación 1) | Una validación legítima eliminada deja un viaje sin registrar; una repetida que se conserva cobra un viaje que no ocurrió. | El usuario, que paga de más o pierde el registro de su viaje y tiene que reclamar para corregirlo. | Dos validaciones solo son iguales si coinciden validador, tarjeta y marca de tiempo; el archivo original se conserva sin cambios. |
+| Cobro por encima del tope (operación 4) | El usuario paga más que la combinación más barata, como los $5.600 del contraejemplo de 5.1. | El usuario, que pierde ese dinero si no detecta el error o tiene que reclamarlo; y Atención al Usuario, que debe atender y revisar cada reclamación. | La programación dinámica calcula el mínimo exacto, reconstruye las compras que lo justifican y se verificó contra la exhaustiva. |
+| Franja de congestión equivocada (operación 3) | Planeación refuerza la estación o la hora que no es. | Los usuarios de la estación realmente congestionada, que siguen esperando en plataformas llenas, y el operador, que gasta recursos donde no se necesitan. | Kadane encuentra el tramo máximo exacto, incluso con todos los saldos negativos, y se verificó contra la fuerza bruta y dividir y vencer. |
+| Retraso del proceso nocturno | Los validadores abren a las 04:30 sin la lista actualizada de tarjetas robadas o extraviadas. | El usuario que reportó su tarjeta, que puede seguir perdiendo saldo, y el personal de las estaciones. | Las operaciones 3 y 4 ya terminan en segundos, pero el retraso viene sobre todo de las operaciones 1 y 2, que no se modificaron: el riesgo sigue mientras no se optimicen (6.1). |
+
+En los cuatro casos, quien asume el costo es sobre todo el usuario, que no tiene cómo detectar el error por sí mismo. Por eso la solución no se limita a ser rápida: combina exactitud, verificación contra soluciones de referencia y trazabilidad (6.4).
+
+### 6.4 Marco normativo y buenas prácticas
 
 - **Ley 1581 de 2012 (protección de datos personales):** fija principios como la finalidad, la veracidad, el acceso y la circulación restringida, la seguridad y la confidencialidad (Congreso de Colombia, 2012, arts. 1, 2 y 4). Las validaciones registran la tarjeta, el momento y el lugar de un viaje; cuando pueden asociarse a una persona, deben conservarse íntegras, con acceso limitado y usarse solo para las finalidades autorizadas.
 - **Ley 336 de 1996 (Estatuto Nacional de Transporte):** incluye el transporte público masivo y establece la seguridad y la protección de los usuarios como prioridades del sector (Congreso de Colombia, 1996, arts. 1, 2 y 3). Los algoritmos del proyecto no definen tarifas: aplican las reglas de liquidación ya establecidas.
 - **Decreto 1079 de 2015 (Decreto Único Reglamentario del Sector Transporte):** basa la determinación de las necesidades del servicio masivo en estudios de demanda y en la asignación de rutas y equipos (Presidencia de la República de Colombia, 2015, arts. 2.2.1.2.1.2.5 y 2.2.1.2.1.2.6). Los resultados de la operación 3 sirven de apoyo a esos análisis, sin reemplazar las decisiones de las autoridades competentes.
 
-**Crecimiento: ¿cómo se comportan las estrategias recomendadas si entra una tercera línea de cable y las validaciones diarias crecen un 30 %?**
+**Buenas prácticas:**
 
-Las validaciones pasarían de 1.400.000 a unas 1.820.000 diarias (420.000 más), con el mismo servidor de 500 W y la misma ventana de cuatro horas.
+- **Trazabilidad de los datos originales:** ninguna estrategia modifica su entrada (las pruebas de 4.1 y 4.2 lo comprueban), así que el archivo de validaciones del día se conserva tal como llegó. Ante una reclamación, cualquier resultado puede recalcularse desde los datos originales y compararse.
+- **Resultados que se pueden justificar:** la programación dinámica no solo entrega el costo mínimo, sino las compras que lo componen (lista `elecciones`, 2.1). Cada devolución se puede explicar al usuario con el detalle de qué pases cubrían sus viajes.
+- **Exactitud verificada:** ninguna estrategia recomendada usa aproximaciones; todas se validaron contra soluciones de referencia independientes, con casos límite y datos aleatorios.
+- **Datos sintéticos y reproducibles:** las pruebas y mediciones usan datos generados con semilla fija, sin información personal real, y cualquiera puede repetirlas (apartado 8).
+- **Uso limitado de la información (recomendación):** el código no controla accesos, así que se recomienda que el SITVM use los datos de las validaciones solo para conciliar el recaudo y planear la operación, y que restrinja su acceso a las áreas que los necesitan.
+
+### 6.5 Sostenibilidad de la decisión
+
+La tercera línea de cable llevaría las validaciones de 1.400.000 a unas 1.820.000 diarias (420.000 más), con el mismo servidor de 500 W y la misma ventana de cuatro horas.
 
 - **Operación 3:** el número de intervalos depende del periodo histórico analizado más que de las validaciones. Aun si creciera un 30 %, Kadane, con tiempo Θ(n) y espacio Θ(1), haría cerca de un 30 % más de trabajo y seguiría por debajo de un segundo por estación, mientras que la fuerza bruta crecería cerca de un 69 % (1,3²).
 - **Operación 4:** la programación dinámica es Θ(d) por tarjeta y d no pasa de 31 días, así que la tabla no crece. El costo total crece en proporción a las tarjetas activas: con un 30 % más de tarjetas, el cierre pasaría de unos 6,7 a unos 8,7 segundos.
 
-Ambas estrategias mantienen un crecimiento controlado y dejan amplio margen dentro de la ventana nocturna, por lo que son una decisión sostenible. Aun así, como el consumo real depende también de las tarjetas, los históricos y el hardware, se recomienda repetir las mediciones con volúmenes crecientes y conservar las pruebas de exactitud a medida que el sistema crezca.
+Ambas estrategias mantienen un crecimiento controlado, consumen una energía prácticamente nula (6.1) y dejan amplio margen dentro de la ventana nocturna, por lo que son una decisión sostenible. Aun así, como el consumo real depende también de las tarjetas, los históricos y el hardware, se recomienda repetir las mediciones con volúmenes crecientes y conservar las pruebas de exactitud a medida que el sistema crezca.
 
 ---
 
