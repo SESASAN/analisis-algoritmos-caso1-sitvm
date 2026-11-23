@@ -781,7 +781,7 @@ Un error en estas operaciones no se queda en el servidor: alguien termina pagán
 | Deduplicación incorrecta (operación 1) | Una validación legítima eliminada deja un viaje sin registrar; una repetida que se conserva cobra un viaje que no ocurrió. | El usuario, que paga de más o pierde el registro de su viaje y tiene que reclamar para corregirlo. | Dos validaciones solo son iguales si coinciden validador, tarjeta y marca de tiempo; el archivo original se conserva sin cambios. |
 | Cobro por encima del tope (operación 4) | El usuario paga más que la combinación más barata, como los $5.600 del contraejemplo de 5.1. | El usuario, que pierde ese dinero si no detecta el error o tiene que reclamarlo; y Atención al Usuario, que debe atender y revisar cada reclamación. | La programación dinámica calcula el mínimo exacto, reconstruye las compras que lo justifican y se verificó contra la exhaustiva. |
 | Franja de congestión equivocada (operación 3) | Planeación refuerza la estación o la hora que no es. | Los usuarios de la estación realmente congestionada, que siguen esperando en plataformas llenas, y el operador, que gasta recursos donde no se necesitan. | Kadane encuentra el tramo máximo exacto, incluso con todos los saldos negativos, y se verificó contra la fuerza bruta y dividir y vencer. |
-| Retraso del proceso nocturno | Los validadores abren a las 04:30 sin la lista actualizada de tarjetas robadas o extraviadas. | El usuario que reportó su tarjeta, que puede seguir perdiendo saldo, y el personal de las estaciones. | Las mediciones confirman que las operaciones 3 y 4 terminan en segundos, muy dentro de la ventana de 00:00 a 04:00. |
+| Retraso del proceso nocturno | Los validadores abren a las 04:30 sin la lista actualizada de tarjetas robadas o extraviadas. | El usuario que reportó su tarjeta, que puede seguir perdiendo saldo, y el personal de las estaciones. | Las operaciones 3 y 4 ya terminan en segundos, pero el retraso viene sobre todo de las operaciones 1 y 2, que no se modificaron: el riesgo sigue mientras no se optimicen (6.1). |
 
 En los cuatro casos, quien asume el costo es sobre todo el usuario, que no tiene cómo detectar el error por sí mismo. Por eso la solución no se limita a ser rápida: combina exactitud, verificación contra soluciones de referencia y trazabilidad (6.4).
 
@@ -791,13 +791,13 @@ En los cuatro casos, quien asume el costo es sobre todo el usuario, que no tiene
 - **Ley 336 de 1996 (Estatuto Nacional de Transporte):** incluye el transporte público masivo y establece la seguridad y la protección de los usuarios como prioridades del sector (Congreso de Colombia, 1996, arts. 1, 2 y 3). Los algoritmos del proyecto no definen tarifas: aplican las reglas de liquidación ya establecidas.
 - **Decreto 1079 de 2015 (Decreto Único Reglamentario del Sector Transporte):** basa la determinación de las necesidades del servicio masivo en estudios de demanda y en la asignación de rutas y equipos (Presidencia de la República de Colombia, 2015, arts. 2.2.1.2.1.2.5 y 2.2.1.2.1.2.6). Los resultados de la operación 3 sirven de apoyo a esos análisis, sin reemplazar las decisiones de las autoridades competentes.
 
-**Buenas prácticas aplicadas en la solución:**
+**Buenas prácticas:**
 
 - **Trazabilidad de los datos originales:** ninguna estrategia modifica su entrada (las pruebas de 4.1 y 4.2 lo comprueban), así que el archivo de validaciones del día se conserva tal como llegó. Ante una reclamación, cualquier resultado puede recalcularse desde los datos originales y compararse.
 - **Resultados que se pueden justificar:** la programación dinámica no solo entrega el costo mínimo, sino las compras que lo componen (lista `elecciones`, 2.1). Cada devolución se puede explicar al usuario con el detalle de qué pases cubrían sus viajes.
 - **Exactitud verificada:** ninguna estrategia recomendada usa aproximaciones; todas se validaron contra soluciones de referencia independientes, con casos límite y datos aleatorios.
 - **Datos sintéticos y reproducibles:** las pruebas y mediciones usan datos generados con semilla fija, sin información personal real, y cualquiera puede repetirlas (apartado 8).
-- **Uso limitado de la información:** los datos de las validaciones se usan solo para conciliar el recaudo y planear la operación, con acceso restringido a las áreas que los necesitan.
+- **Uso limitado de la información (recomendación):** el código no controla accesos, así que se recomienda que el SITVM use los datos de las validaciones solo para conciliar el recaudo y planear la operación, y que restrinja su acceso a las áreas que los necesitan.
 
 ### 6.5 Sostenibilidad de la decisión
 
